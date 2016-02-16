@@ -138,7 +138,7 @@ private:
 
     // Activates this OneShot object, by inserting into the simulation's
     // timeVortex for future execution.
-    SimTime_t scheduleOneShot();
+    void scheduleOneShot(SimTime_t nextEventTime);
 
     TimeConverter*      m_timeDelay;
     HandlerVectorMap_t  m_HandlerVectorMap;

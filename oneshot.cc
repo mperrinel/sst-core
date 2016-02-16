@@ -51,11 +51,11 @@ OneShot::~OneShot()
     
 void OneShot::registerHandler(OneShot::HandlerBase* handler)
 {
-    SimTime_t      nextEventTime;
     HandlerList_t* ptrHandlerList;
     
-    // Since we have a new handler, schedule the OneShot to callback in the future
-    nextEventTime = scheduleOneShot();
+    // Determine when this handler should be scheduled
+    Simulation * sim = Simulation::getSimulation();
+    SimTime_t nextEventTime = sim->getCurrentSimCycle() + m_timeDelay->getFactor();
 
     // Check to see if the nextEventTime is already in our map     
     if (m_HandlerVectorMap.find(nextEventTime) == m_HandlerVectorMap.end()) {
@@ -73,24 +73,17 @@ void OneShot::registerHandler(OneShot::HandlerBase* handler)
     
     // Set the handlerList to the map of the specific time
     m_HandlerVectorMap[nextEventTime] = ptrHandlerList; 
+
+    // If this OneShot is not scheduled, schedule it now
+    if (!m_scheduled) scheduleOneShot(nextEventTime);
 }
 
-SimTime_t OneShot::scheduleOneShot()
+void OneShot::scheduleOneShot(SimTime_t nextEventTime)
 {
-    // Add an event in the future into the TimeVortex for when 
-    // the OneShot should Fire.
-    Simulation* sim = Simulation::getSimulation();
-
-    // Figure out what the next time should be for when the OneShot should fire 
-    SimTime_t nextEventTime = sim->getCurrentSimCycle() + m_timeDelay->getFactor();
-
-//    std::cout << "OneShot (scheduleOneShot) " << m_timeDelay->getFactor() << " Scheduling; target cycle = " << nextEventTime << " current cycle = " << sim->getCurrentSimCycle() << std::endl;
-
     // Add this one shot to the Activity queue, and mark this OneShot at scheduled 
+    Simulation * sim = Simulation::getSimulation();
     sim->insertActivity(nextEventTime, this);
     m_scheduled = true;
-    
-    return nextEventTime;
 }
 
 void OneShot::execute(void) 
@@ -139,7 +132,15 @@ void OneShot::execute(void)
     // Delete the Handler list and remove it from the map
     delete ptrHandlerList;
     m_HandlerVectorMap.erase(currentEventTime);
-    m_scheduled = false;
+    
+    // Schedule the next callback if needed
+    if (!m_HandlerVectorMap.empty()) {
+        // Determine the next set of handlers (in time) that should be scheduled
+        SimTime_t nextEventTime = m_HandlerVectorMap.begin()->first;
+        scheduleOneShot(nextEventTime);
+    } else {
+        m_scheduled = false;
+    }
 }
 
 void OneShot::print(const std::string& header, Output &out) const
