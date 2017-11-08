@@ -12,6 +12,7 @@
 #include "sst_config.h"
 #include <sst/core/warnmacros.h>
 #include "sst/core/rankSyncParallelSkip.h"
+#include <xmmintrin.h>
 
 #include "sst/core/serialization/serializer.h"
 
