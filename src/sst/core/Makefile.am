@@ -130,11 +130,13 @@ nobase_dist_sst_HEADERS = \
 	statapi/statuniquecount.h \
 	statapi/statoutputtxt.h \
 	statapi/statoutputcsv.h \
-	statapi/statoutputjson.h \
-	statapi/statoutputhdf5.h \
+        statapi/statoutputjson.h \
+        statapi/statoutputhdf5.h \
+        statapi/statoutputexodus.h \
 	statapi/statbase.h \
-	statapi/stathistogram.h \
-	statapi/stataccumulator.h \
+        statapi/stathistogram.h \
+        statapi/stattraffic.h \
+        statapi/stataccumulator.h \
 	statapi/statnull.h \
 	statapi/componentregisterstat_impl.h \
 	threadsafe.h \
@@ -205,8 +207,9 @@ sst_core_sources = \
 	statapi/statoutputconsole.cc \
 	statapi/statoutputtxt.cc \
 	statapi/statoutputcsv.cc \
-	statapi/statoutputjson.cc \
-	statapi/statbase.cc \
+        statapi/statoutputjson.cc \
+        statapi/statoutputexodus.cc \
+        statapi/statbase.cc \
 	cputimer.cc \
 	iouse.cc
 

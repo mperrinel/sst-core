@@ -33,7 +33,7 @@ class StatisticFieldInfo
 {
 public:
     /** Supported Field Types */
-    enum fieldType_t {UNDEFINED, UINT32, UINT64, INT32, INT64, FLOAT, DOUBLE};
+    enum fieldType_t {UNDEFINED, UINT32, UINT64, INT32, INT64, FLOAT, DOUBLE, TRAFFICEVENT};
     typedef int32_t fieldHandle_t;
 
 public:
@@ -82,7 +82,8 @@ public:
         if (is_type_same<T, uint64_t   >::value){return UINT64;}
         if (is_type_same<T, float      >::value){return FLOAT; }
         if (is_type_same<T, double     >::value){return DOUBLE;}
-        
+        if (is_type_same<T, traffic_event     >::value){return TRAFFICEVENT;}
+
         // If we get here, the data type is undefined
         return UNDEFINED;
     }

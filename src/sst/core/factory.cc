@@ -29,6 +29,7 @@
 #include <sst/core/statapi/statoutputconsole.h>
 #include <sst/core/statapi/statoutputtxt.h>
 #include <sst/core/statapi/statoutputcsv.h>
+#include <sst/core/statapi/statoutputexodus.h>
 #include <sst/core/statapi/statoutputjson.h>
 #ifdef HAVE_HDF5
 #include <sst/core/statapi/statoutputhdf5.h>
@@ -37,6 +38,7 @@
 #include <sst/core/statapi/stataccumulator.h>
 #include <sst/core/statapi/stathistogram.h>
 #include <sst/core/statapi/statnull.h>
+#include <sst/core/statapi/stattraffic.h>
 #include <sst/core/statapi/statuniquecount.h>
 
 using namespace SST::Statistics;
@@ -213,17 +215,21 @@ static Statistic<T>* buildStatistic(BaseComponent *comp, const std::string &type
             return new NullStatistic<T>(comp, statName, statSubId, params);
         }
 
-        if (0 == ::strcasecmp("sst.accumulatorstatistic", type.c_str())) {
-            return new AccumulatorStatistic<T>(comp, statName, statSubId, params);
+//        if (0 == ::strcasecmp("sst.accumulatorstatistic", type.c_str())) {
+//            return new AccumulatorStatistic<T>(comp, statName, statSubId, params);
+//        }
+
+        if (0 == ::strcasecmp("sst.TrafficStatistic", type.c_str())) {
+            return new TrafficStatistic<T>(comp, statName, statSubId, params);
         }
 
-        if (0 == ::strcasecmp("sst.histogramstatistic", type.c_str())) {
-            return new HistogramStatistic<T>(comp, statName, statSubId, params);
-        }
+//        if (0 == ::strcasecmp("sst.histogramstatistic", type.c_str())) {
+//            return new HistogramStatistic<T>(comp, statName, statSubId, params);
+//        }
 
-        if(0 == ::strcasecmp("sst.uniquecountstatistic", type.c_str())) {
-            return new UniqueCountStatistic<T>(comp, statName, statSubId, params);
-        }
+//        if(0 == ::strcasecmp("sst.uniquecountstatistic", type.c_str())) {
+//            return new UniqueCountStatistic<T>(comp, statName, statSubId, params);
+//        }
 
         return NULL;
 }
@@ -236,24 +242,29 @@ StatisticBase* Factory::CreateStatistic(BaseComponent* comp, const std::string &
     StatisticBase * res = NULL;
     switch (fieldType) {
     case StatisticFieldInfo::UINT32:
-        res = buildStatistic<uint32_t>(comp, type, statName, statSubId, params);
+        //res = buildStatistic<uint32_t>(comp, type, statName, statSubId, params);
         break;
     case StatisticFieldInfo::UINT64:
-        res = buildStatistic<uint64_t>(comp, type, statName, statSubId, params);
+        //res = buildStatistic<uint64_t>(comp, type, statName, statSubId, params);
         break;
     case StatisticFieldInfo::INT32:
-        res = buildStatistic<int32_t>(comp, type, statName, statSubId, params);
+        //res = buildStatistic<int32_t>(comp, type, statName, statSubId, params);
         break;
     case StatisticFieldInfo::INT64:
-        res = buildStatistic<int64_t>(comp, type, statName, statSubId, params);
+        //res = buildStatistic<int64_t>(comp, type, statName, statSubId, params);
         break;
     case StatisticFieldInfo::FLOAT:
-        res = buildStatistic<float>(comp, type, statName, statSubId, params);
+        //res = buildStatistic<float>(comp, type, statName, statSubId, params);
         break;
     case StatisticFieldInfo::DOUBLE:
-        res = buildStatistic<double>(comp, type, statName, statSubId, params);
+        //res = buildStatistic<double>(comp, type, statName, statSubId, params);
         break;
     default:
+       std::cout << " type of stat is : " << type << std::endl;
+        if(type == "sst.TrafficStatistic"){
+          res = buildStatistic<SST::traffic_event>(comp, type, statName, statSubId, params);
+        }
+
         break;
     }
     if ( res == NULL ) {
@@ -494,6 +505,13 @@ Factory::LoadCoreModule_StatisticOutputs(std::string& type, Params& params)
 
     if (0 == ::strcasecmp("statoutputjson", type.c_str())) {
         return new StatisticOutputJSON(params);
+    }
+
+    if (0 == ::strcasecmp("statoutputexodus", type.c_str())) {
+        std::cout << "Factory::LoadCoreModule_StatisticOutputs "<< type<< std::endl;
+        auto exodusOutput = new StatisticOutputEXODUS(params);
+        outputTypeToModule.insert(std::pair<std::string, Module *>(type, exodusOutput));
+        return exodusOutput;
     }
 
     if (0 == ::strcasecmp("statoutputcsvgz", type.c_str())) {
@@ -827,6 +845,7 @@ Factory::parseLoadName(const std::string& wholename)
 
 const ElementLibraryInfo* Factory::loadLibrary(std::string name, bool showErrors)
 {
+  showErrors = true;
     if ( name == "sst" ) return NULL;
     const ElementLibraryInfo* eli = loader->loadLibrary(name, showErrors);
 
@@ -846,6 +865,20 @@ const ElementLibraryInfo* Factory::loadLibrary(std::string name, bool showErrors
         }
     }
     return eli;
+}
+
+void Factory::registerOptionnalCallback(const std::string& statOutputType, std::function<void (const std::multimap<uint64_t, traffic_event> &, int, int)> callBack)
+{
+  std::cout << "Factory::registerOptionnalCallback: " << statOutputType<< std::endl;
+  const auto it = outputTypeToModule.find(statOutputType);
+  if(it != outputTypeToModule.cend())
+  {
+    std::cout << "StatisticOutputEXODUS::registerOptionnalCallback MODULE FOUND" << std::endl;
+    if(auto exodusModule = dynamic_cast<StatisticOutputEXODUS *>(it->second)){
+      exodusModule->addOptionnalCallBack(callBack);
+    }
+  }
+
 }
 
 } //namespace SST

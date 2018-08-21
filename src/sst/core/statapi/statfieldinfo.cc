@@ -49,7 +49,8 @@ const char* StatisticFieldInfo::getFieldTypeShortName(fieldType_t type)
         case StatisticFieldInfo::UINT64 : return "u64"; break;
         case StatisticFieldInfo::FLOAT  : return "f32"; break;
         case StatisticFieldInfo::DOUBLE : return "f64"; break;
-        default: return "INVALID"; break;    
+        case StatisticFieldInfo::TRAFFICEVENT : return "tevt"; break;
+        default: return "INVALID"; break;
     }
 }
 
@@ -62,7 +63,8 @@ const char* StatisticFieldInfo::getFieldTypeFullName(fieldType_t type)
         case StatisticFieldInfo::UINT64 : return "UINT64"; break;
         case StatisticFieldInfo::FLOAT  : return "FLOAT"; break;
         case StatisticFieldInfo::DOUBLE : return "DOUBLE"; break;
-        default: return "INVALID"; break;    
+        case StatisticFieldInfo::TRAFFICEVENT : return "TRAFFICEVENT"; break;
+        default: return "INVALID"; break;
     }
 }
 

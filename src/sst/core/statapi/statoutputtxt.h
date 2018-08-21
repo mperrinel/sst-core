@@ -82,6 +82,7 @@ protected:
     void implOutputField(fieldHandle_t fieldHandle, uint64_t data) override;
     void implOutputField(fieldHandle_t fieldHandle, float data) override;
     void implOutputField(fieldHandle_t fieldHandle, double data) override;
+    void implOutputField(fieldHandle_t fieldHandle, traffic_event data) override;
 
 protected:
     StatisticOutputTxt() {;} // For serialization

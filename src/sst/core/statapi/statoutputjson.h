@@ -32,6 +32,8 @@ public:
      */
     StatisticOutputJSON(Params& outputParameters);
 
+    bool acceptsGroups() const override { return true; }
+
 protected:
     /** Perform a check of provided parameters
      * @return True if all required parameters and options are acceptable 
@@ -78,7 +80,8 @@ protected:
     void implOutputField(fieldHandle_t fieldHandle, uint64_t data) override;
     void implOutputField(fieldHandle_t fieldHandle, float data) override;
     void implOutputField(fieldHandle_t fieldHandle, double data) override;
-    
+    void implOutputField(fieldHandle_t fieldHandle, traffic_event data) override;
+
     void printIndent();
 
 protected:

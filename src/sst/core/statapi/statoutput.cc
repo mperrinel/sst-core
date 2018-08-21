@@ -199,6 +199,13 @@ void StatisticOutput::outputField(fieldHandle_t fieldHandle, double data)
     implOutputField(fieldHandle, data);
 }
 
+void StatisticOutput::outputField(fieldHandle_t fieldHandle, traffic_event data)
+{
+    // Call the Derived class method
+    implOutputField(fieldHandle, data);
+}
+
+
 const char* StatisticOutput::getFieldTypeShortName(fieldType_t type)
 {
     return StatisticFieldInfo::getFieldTypeShortName(type);

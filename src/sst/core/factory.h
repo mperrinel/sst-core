@@ -178,6 +178,8 @@ public:
      */
     std::string GetComponentInfoStatisticUnits(const std::string& type, const std::string& statisticName);
 
+    void registerOptionnalCallback(const std::string& statOutputType, std::function<void (const std::multimap<uint64_t, traffic_event> &, int, int)> callBack);
+
 private:
     Module* LoadCoreModule_StatisticOutputs(std::string& type, Params& params);
 
@@ -215,6 +217,7 @@ private:
 
     std::recursive_mutex factoryMutex;
 
+    std::map<std::string, Module *> outputTypeToModule;
 
 protected:
    Output &out;

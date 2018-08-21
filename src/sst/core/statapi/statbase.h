@@ -172,7 +172,10 @@ public:
     virtual bool isReady() const {return true;}     
 
     /** Indicate if the Statistic is a NullStatistic */
-    virtual bool isNullStatistic() const {return false;} 
+    virtual bool isNullStatistic() const {return false;}
+
+    /** Return the Statistic Parameters */
+    Params& getDynamicParams() {return m_dynamicStatParams;}
 
 protected:
     friend class SST::Statistics::StatisticProcessingEngine;
@@ -259,6 +262,7 @@ private:
     std::string           m_statFullName;
     std::string           m_statTypeName;
     Params                m_statParams;
+    Params                m_dynamicStatParams;
     StatMode_t            m_registeredCollectionMode;
     uint64_t              m_currentCollectionCount;
     uint64_t              m_collectionCountLimit;

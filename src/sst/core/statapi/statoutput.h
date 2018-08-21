@@ -80,7 +80,7 @@ public:
      *       handle.
      */
     // Field Registration
-    // ONLY SUPPORTED TYPES ARE int32_t, uint32_t, int64_t, uint64_t, float, double
+    // ONLY SUPPORTED TYPES ARE int32_t, uint32_t, int64_t, uint64_t, float, double, traffic_event
     template<typename T>
     fieldHandle_t registerField(const char* fieldName)
     {
@@ -114,7 +114,7 @@ public:
      * @return Pointer to the registered field info.
      */
     // Get Registered Fields
-    // ONLY SUPPORTED TYPES ARE int32_t, uint32_t, int64_t, uint64_t, float, double
+    // ONLY SUPPORTED TYPES ARE int32_t, uint32_t, int64_t, uint64_t, float, double, traffic_event
     template<typename T>
     StatisticFieldInfo* getRegisteredField(const char* statisticName, const char* fieldName)
     {
@@ -154,6 +154,7 @@ public:
     void outputField(fieldHandle_t fieldHandle, uint64_t data);  
     void outputField(fieldHandle_t fieldHandle, float data);  
     void outputField(fieldHandle_t fieldHandle, double data);
+    void outputField(fieldHandle_t fieldHandle, traffic_event data);
     
     /** Output field data.  
      * @param type - The field type to get name of.
@@ -211,6 +212,7 @@ protected:
     virtual void implOutputField(fieldHandle_t fieldHandle, uint64_t data) = 0;  
     virtual void implOutputField(fieldHandle_t fieldHandle, float data) = 0;  
     virtual void implOutputField(fieldHandle_t fieldHandle, double data) = 0;
+    virtual void implOutputField(fieldHandle_t fieldHandle, traffic_event data) = 0;
 
 
 private:

@@ -267,6 +267,9 @@ void StatisticOutputCSV::implOutputField(fieldHandle_t fieldHandle, double data)
     m_OutputBufferArray[fieldHandle] = buffer;
 }
 
+void StatisticOutputCSV::implOutputField(fieldHandle_t fieldHandle, traffic_event data){
+  std::cerr << "StatisticOutputCSV cannot output data of type traffic_event." <<std::endl;
+}
 
 bool StatisticOutputCSV::openFile(void)
 {

@@ -178,20 +178,25 @@ void StatisticProcessingEngine::finalizeInitialization()
 void StatisticProcessingEngine::startOfSimulation()
 {
     m_SimulationStarted = true;
+    std::cout<< " Start of the simulation " << std::endl;
 
     for ( auto &so : m_statOutputs ) {
-        so->startOfSimulation();
+      std::cout<< " Start of the simulation m_statOutputs" << std::endl;
+      so->startOfSimulation();
     }
 }
 
 
 void StatisticProcessingEngine::endOfSimulation()
 {
+  std::cout<< " End of the simulation " << std::endl;
 
-    // Output the Event based Statistics
+    // Output the Event based Statistic
     for ( StatisticBase * stat : m_EventStatisticArray ) {
-        // Check to see if the Statistic is to output at end of sim
+       std::cout<< " End of the simulation Event based Statistic "<< stat->getFullStatName() << std::endl;
+       // Check to see if the Statistic is to output at end of sim
         if (true == stat->getFlagOutputAtEndOfSim()) {
+          std::cout<< " Perform the output Event based Statistic "<< stat->getFullStatName() << std::endl;
             // Perform the output
            performStatisticOutputImpl(stat, true);
         }
@@ -201,10 +206,11 @@ void StatisticProcessingEngine::endOfSimulation()
     for ( auto & it_m : m_PeriodicStatisticMap ) {
         // Get the array from the Map Iterator
         StatArray_t* statArray = it_m.second;
-
         for ( StatisticBase* stat : *statArray ) {
             // Check to see if the Statistic is to output at end of sim
+          std::cout<< " End of the simulation Periodic based Statistic "<< stat->getFullStatName() << std::endl;
             if (true == stat->getFlagOutputAtEndOfSim()) {
+              std::cout<< " Perform the output Periodic based Statistic "<< stat->getFullStatName() << std::endl;
                 // Perform the output
                performStatisticOutputImpl(stat, true);
             }
@@ -212,11 +218,13 @@ void StatisticProcessingEngine::endOfSimulation()
     }
 
     for ( auto & sg : m_statGroups ) {
+      std::cout<< " End of the simulation m_statGroups"<< sg.name << std::endl;
         performStatisticGroupOutputImpl(sg, true);
     }
 
 
     for ( auto &so : m_statOutputs ) {
+      std::cout<< " End of the simulation m_statOutputs: "<< so->getStatisticOutputName() << std::endl;
         so->endOfSimulation();
     }
 }
@@ -266,6 +274,7 @@ StatisticGroup& StatisticProcessingEngine::getGroupForStatistic(const StatisticB
 
 bool StatisticProcessingEngine::addPeriodicBasedStatistic(const UnitAlgebra& freq, StatisticBase* stat)
 {
+  std::cout<< " addPeriodicBasedStatistic " << std::endl;
     Simulation*         sim = Simulation::getSimulation();
     TimeConverter*      tcFreq = sim->getTimeLord()->getTimeConverter(freq);
     SimTime_t           tcFactor = tcFreq->getFactor();
@@ -303,7 +312,8 @@ bool StatisticProcessingEngine::addPeriodicBasedStatistic(const UnitAlgebra& fre
 
 bool StatisticProcessingEngine::addEventBasedStatistic(const UnitAlgebra& count, StatisticBase* stat)
 {
-    if (0 != count.getValue()) {         
+  std::cout<< " addEventBasedStatistic "<< count.toString() << std::endl;
+    if (0 != count.getValue()) {
         // Set the Count Limit
         stat->setCollectionCountLimit(count.getRoundedValue());
     } else {
@@ -337,6 +347,8 @@ UnitAlgebra StatisticProcessingEngine::getParamTime(StatisticBase *stat, const s
 
 void StatisticProcessingEngine::setStatisticStartTime(StatisticBase* stat)
 {
+  std::string pname = stat->getFullStatName();
+  std::cout<< " setStatisticStartTime " << pname<< std::endl;
     UnitAlgebra startTime = getParamTime(stat, "startat");
     Simulation*           sim = Simulation::getSimulation();
     TimeConverter*        tcStartTime = sim->getTimeLord()->getTimeConverter(startTime);
@@ -372,6 +384,8 @@ void StatisticProcessingEngine::setStatisticStartTime(StatisticBase* stat)
 
 void StatisticProcessingEngine::setStatisticStopTime(StatisticBase* stat)
 {
+  std::string pname = stat->getFullStatName();
+  std::cout<< " setStatisticStopTime " << pname<< std::endl;
     UnitAlgebra stopTime = getParamTime(stat, "startat");
     Simulation*           sim = Simulation::getSimulation();
     TimeConverter*        tcStopTime = sim->getTimeLord()->getTimeConverter(stopTime);
@@ -404,6 +418,7 @@ void StatisticProcessingEngine::setStatisticStopTime(StatisticBase* stat)
 
 void StatisticProcessingEngine::performStatisticOutput(StatisticBase* stat, bool endOfSimFlag /*=false*/)
 {
+  std::cout<< " performStatisticOutput " << endOfSimFlag << std::endl;
     if ( stat->getGroup()->isDefault )
         performStatisticOutputImpl(stat, endOfSimFlag);
     else
@@ -462,12 +477,15 @@ void StatisticProcessingEngine::performStatisticGroupOutputImpl(StatisticGroup &
                 }
             }
         }
+
     }
+
 }
 
 
-void StatisticProcessingEngine::performGlobalStatisticOutput(bool endOfSimFlag /*=false*/) 
+void StatisticProcessingEngine::performGlobalStatisticOutput(bool endOfSimFlag /*=false*/)
 {
+  std::cout<< " performGlobalStatisticOutput " << endOfSimFlag << std::endl;
     StatArray_t*    statArray;
     StatisticBase*  stat;
 

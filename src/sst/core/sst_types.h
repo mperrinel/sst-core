@@ -18,6 +18,15 @@
 
 namespace SST {
 
+
+struct traffic_event {
+    uint64_t time_; // progress time
+    int id_; // Id of the switch
+    int p_; // port of the node Id
+    int type_; // arrive or leave
+    int intensity_; // traffic intenisity
+};
+
 typedef uint64_t  ComponentId_t;
 typedef int32_t   LinkId_t;
 typedef uint64_t  Cycle_t;

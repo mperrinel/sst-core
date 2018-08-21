@@ -237,6 +237,9 @@ void StatisticOutputJSON::implOutputField(fieldHandle_t UNUSED(fieldHandle), dou
 	m_firstField = false;
 }
 
+void StatisticOutputJSON::implOutputField(fieldHandle_t fieldHandle, traffic_event data){
+    std::cerr << "StatisticOutputJSON cannot output data of type traffic_event." <<std::endl;
+}
 
 bool StatisticOutputJSON::openFile(void)
 {

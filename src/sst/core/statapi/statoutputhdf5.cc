@@ -193,6 +193,9 @@ void StatisticOutputHDF5::implOutputField(fieldHandle_t fieldHandle, double data
     m_currentDataSet->getFieldLoc(fieldHandle).d = data;
 }
 
+void StatisticOutputHDF5::implOutputField(fieldHandle_t fieldHandle, traffic_event data){
+  std::cerr << "StatisticOutputHDF5 cannot output data of type traffic_event." <<std::endl;
+}
 
 
 StatisticOutputHDF5::StatisticInfo* StatisticOutputHDF5::initStatistic(StatisticBase* statistic)

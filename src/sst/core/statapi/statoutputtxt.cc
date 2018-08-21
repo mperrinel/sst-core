@@ -297,6 +297,9 @@ void StatisticOutputTxt::implOutputField(fieldHandle_t fieldHandle, double data)
     }
 }
 
+void StatisticOutputTxt::implOutputField(fieldHandle_t fieldHandle, traffic_event data){
+    std::cerr << "StatisticOutputTxt cannot output data of type traffic_event." <<std::endl;
+}
 
 bool StatisticOutputTxt::openFile(void)
 {

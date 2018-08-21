@@ -147,5 +147,9 @@ void StatisticOutputConsole::implOutputField(fieldHandle_t fieldHandle, double d
     }
 }
 
+void StatisticOutputConsole::implOutputField(fieldHandle_t fieldHandle, traffic_event data){
+    std::cerr << "StatisticOutputConsole cannot output data of type traffic_event." <<std::endl;
+}
+
 } //namespace Statistics
 } //namespace SST
