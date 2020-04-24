@@ -19,6 +19,7 @@
 #include "sst/core/statapi/statuniquecount.h"
 #include "sst/core/statapi/statoutputconsole.h"
 #include "sst/core/statapi/statoutputcsv.h"
+#include "sst/core/statapi/statoutputexodus.h"
 #include "sst/core/statapi/statoutputjson.h"
 #include "sst/core/statapi/statoutputtxt.h"
 

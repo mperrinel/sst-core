@@ -33,6 +33,7 @@
 #include "sst/core/statapi/statoutputconsole.h"
 #include "sst/core/statapi/statoutputtxt.h"
 #include "sst/core/statapi/statoutputcsv.h"
+#include "sst/core/statapi/statoutputexodus.h"
 #include "sst/core/statapi/statoutputjson.h"
 #ifdef HAVE_HDF5
 #include "sst/core/statapi/statoutputhdf5.h"
