@@ -24,7 +24,7 @@ namespace Statistics {
 
   The class for statistics output to a EXODUS formatted file
 */
-class StatisticOutputEXODUS : public StatisticFieldsOutput
+class StatisticOutputEXODUS : public StatisticOutput
 {
 public:
     SST_ELI_REGISTER_DERIVED(
@@ -39,6 +39,8 @@ public:
      * @param outputParameters - Parameters used for this Statistic Output
      */
     StatisticOutputEXODUS(Params& outputParameters);
+
+    void output(StatisticBase* statistic, bool endOfSimFlag);
 
 protected:
     /** Perform a check of provided parameters
@@ -59,33 +61,15 @@ protected:
      */
     void endOfSimulation() override;
 
-    /** Implementation function for the start of output.
-     * This will be called by the Statistic Processing Engine to indicate that
-     * a Statistic is about to send data to the Statistic Output for processing.
-     * @param statistic - Pointer to the statistic object than the output can
-     * retrieve data from.
-     */
-    void implStartOutputEntries(StatisticBase* statistic) override;
+private:
+    // Start / Stop of register Fields
+    virtual void registerStatistic(StatisticBase *stat);
 
-    /** Implementation function for the end of output.
-     * This will be called by the Statistic Processing Engine to indicate that
-     * a Statistic is finished sending data to the Statistic Output for processing.
-     * The Statistic Output can perform any output related functions here.
-     */
-    void implStopOutputEntries() override;
+    virtual void startOutputGroup(StatisticGroup* group);
+    virtual void stopOutputGroup();
 
-    /** Implementation functions for output.
-     * These will be called by the statistic to provide Statistic defined
-     * data to be output.
-     * @param fieldHandle - The handle to the registered statistic field.
-     * @param data - The data related to the registered field to be output.
-     */
-    void outputField(fieldHandle_t fieldHandle, int32_t data) override;
-    void outputField(fieldHandle_t fieldHandle, uint32_t data) override;
-    void outputField(fieldHandle_t fieldHandle, int64_t data) override;
-    void outputField(fieldHandle_t fieldHandle, uint64_t data) override;
-    void outputField(fieldHandle_t fieldHandle, float data) override;
-    void outputField(fieldHandle_t fieldHandle, double data) override;
+    virtual void startRegisterGroup(StatisticGroup* group);
+    virtual void stopRegisterGroup();
 
 protected:
     StatisticOutputEXODUS() {;} // For serialization

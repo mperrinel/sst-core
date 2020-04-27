@@ -20,7 +20,7 @@ namespace Statistics {
 
 
 StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
-    : StatisticFieldsOutput (outputParameters)
+    : StatisticOutput (outputParameters)
 {
     // Announce this output object's name
     Output &out = Simulation::getSimulationOutput();
@@ -30,6 +30,13 @@ StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
     m_currentComponentName = "";
     m_firstEntry = false;
     m_processedAnyStats = false;
+}
+
+
+void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) {
+ // TODO
+ // Cast the statistic into the statVTK subclass
+  //  traffic_progress_map_.insert({data.time_, data});
 }
 
 //void StatisticOutputEXODUS::addOptionnalCallBack(std::function<void (const std::multimap<uint64_t, traffic_event> &, int, int)> callBack){
@@ -98,82 +105,6 @@ void StatisticOutputEXODUS::endOfSimulation()
     closeFile();
 }
 
-void StatisticOutputEXODUS::implStartOutputEntries(StatisticBase* statistic)
-{
-}
-
-void StatisticOutputEXODUS::implStopOutputEntries()
-{
-    //  std::cout << "StatisticOutputEXODUS::implStopOutputGroup"<< std::endl;
-
-    //  //DUMP FOR TRAFFIC
-    //  std::cout << "StatisticOutputEXODUS::traffic_progress_map_ size  "<< traffic_progress_map_.size()<< std::endl;
-    //  std::multimap<std::string, std::multimap<int, int>> tf_nodes_map;
-    //  for (auto it = traffic_progress_map_.cbegin(); it != traffic_progress_map_.cend(); ++it){
-    //    auto nodeId = it->second.id_;
-    //    auto portId = it->second.port_;
-    //    auto nodIdPortIdKey = std::to_string(nodeId) +":"+ std::to_string(portId);
-    //    auto resIt = tf_nodes_map.find(nodIdPortIdKey);
-    //    if(resIt == tf_nodes_map.cend()){
-    //      auto map = std::multimap<int, int>{};
-    //      map.insert({it->first, it->second.color_});
-
-    //      tf_nodes_map.insert({nodIdPortIdKey, map});
-    //    } else {
-    //      auto &map = resIt->second;
-    //      map.insert({it->first, it->second.color_});
-    //    }
-    //  }
-
-    //  //  TORM: display the map in the console
-    //     for (auto it = tf_nodes_map.cbegin(); it != tf_nodes_map.cend(); ++it){
-    //       auto NodeId = it->first;
-    //       const auto &map = it->second;
-    //       std::cout<<NodeId<<":::";
-    //       for(auto it = map.cbegin(); it != map.cend(); ++it){
-    //         std::cout<< it->second << " ";
-    //       }
-    //       std::cout<<std::endl;
-    //     }
-
-    ////  StatVTK::outputExodus(m_FilePath, traffic_progress_map_, Topology::global());
-
-}
-
-void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, int32_t data)
-{
-
-}
-
-void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, uint32_t data)
-{
-
-}
-
-void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, int64_t data)
-{
-
-}
-
-void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, uint64_t data)
-{
-
-}
-
-void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, float data)
-{
-
-}
-
-void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, double data)
-{
-
-}
-
-//void StatisticOutputEXODUS::outputField(fieldHandle_t fieldHandle, traffic_event data){
-//  traffic_progress_map_.insert({data.time_, data});
-//}
-
 bool StatisticOutputEXODUS::openFile(void)
 {
     return true;
@@ -183,26 +114,62 @@ void StatisticOutputEXODUS::closeFile(void)
 {
 }
 
-//void StatisticOutputEXODUS::printIndent() {
+void StatisticOutputEXODUS::registerStatistic(StatisticBase *stat)
+{
+//    startRegisterFields(stat);
+//    stat->registerOutputFields(this);
+//    stopRegisterFields();
+}
 
-//}
+void StatisticOutputEXODUS::startOutputGroup(StatisticGroup *grp)
+{
+}
 
-//void StatisticOutputEXODUS::implStartRegisterGroup(SST::Statistics::StatisticGroup* group)
-//{
-//  m_statGroups.push_back(group);
-//}
+void StatisticOutputEXODUS::stopOutputGroup()
+{
+      //  std::cout << "StatisticOutputEXODUS::implStopOutputGroup"<< std::endl;
 
-//void StatisticOutputEXODUS::implStopRegisterGroup()
-//{
-//}
+      //  //DUMP FOR TRAFFIC
+      //  std::cout << "StatisticOutputEXODUS::traffic_progress_map_ size  "<< traffic_progress_map_.size()<< std::endl;
+      //  std::multimap<std::string, std::multimap<int, int>> tf_nodes_map;
+      //  for (auto it = traffic_progress_map_.cbegin(); it != traffic_progress_map_.cend(); ++it){
+      //    auto nodeId = it->second.id_;
+      //    auto portId = it->second.port_;
+      //    auto nodIdPortIdKey = std::to_string(nodeId) +":"+ std::to_string(portId);
+      //    auto resIt = tf_nodes_map.find(nodIdPortIdKey);
+      //    if(resIt == tf_nodes_map.cend()){
+      //      auto map = std::multimap<int, int>{};
+      //      map.insert({it->first, it->second.color_});
 
-//void StatisticOutputEXODUS::startOutputGroup(StatisticGroup *grp)
-//{
-//}
+      //      tf_nodes_map.insert({nodIdPortIdKey, map});
+      //    } else {
+      //      auto &map = resIt->second;
+      //      map.insert({it->first, it->second.color_});
+      //    }
+      //  }
 
-//void StatisticOutputEXODUS::stopOutputGroup()
-//{
-//}
+      //  //  TORM: display the map in the console
+      //     for (auto it = tf_nodes_map.cbegin(); it != tf_nodes_map.cend(); ++it){
+      //       auto NodeId = it->first;
+      //       const auto &map = it->second;
+      //       std::cout<<NodeId<<":::";
+      //       for(auto it = map.cbegin(); it != map.cend(); ++it){
+      //         std::cout<< it->second << " ";
+      //       }
+      //       std::cout<<std::endl;
+      //     }
+
+      //  StatVTK::outputExodus(m_FilePath, traffic_progress_map_, Topology::global());
+
+}
+
+void StatisticOutputEXODUS::startRegisterGroup(StatisticGroup *grp)
+{
+}
+
+void StatisticOutputEXODUS::stopRegisterGroup()
+{
+}
 
 } //namespace Statistics
 } //namespace SST
