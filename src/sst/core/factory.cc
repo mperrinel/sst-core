@@ -43,6 +43,7 @@
 #include "sst/core/statapi/stathistogram.h"
 #include "sst/core/statapi/statnull.h"
 #include "sst/core/statapi/statuniquecount.h"
+#include "sst/core/statapi/vtk_stats.h"
 
 using namespace SST::Statistics;
 

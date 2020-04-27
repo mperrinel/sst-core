@@ -22,6 +22,7 @@
 #include "sst/core/statapi/statoutputexodus.h"
 #include "sst/core/statapi/statoutputjson.h"
 #include "sst/core/statapi/statoutputtxt.h"
+#include "sst/core/statapi/vtk_stats.h"
 
 namespace SST {
 namespace Statistics {
