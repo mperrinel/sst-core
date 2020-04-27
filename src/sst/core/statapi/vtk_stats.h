@@ -147,51 +147,28 @@ class StatVTK : public MultiStatistic<TimeDelta, int, double>
   };
 
 
-  StatVTK(BaseComponent* comp, const std::string& name,
-          const std::string& subName, Params& params);
-
-//  std::string toString() const override {
-//    return "VTK stats";
-//  }
-
-//  static void outputExodus(const std::string& fileroot,
-//      std::multimap<uint64_t, traffic_event>&& traffMap,
-//      const display_config& cfg,
-//      Topology *topo =nullptr);
-
-   void registerOutputFields(StatisticFieldsOutput* statOutput) override;
-    void outputStatisticFields(StatisticFieldsOutput* statOutput, bool endOfSim) override;
-
-    void addData_impl(TimeDelta time, int port, double intens) override {
-//      event_counts_[event_typeid] += num_ticks;
-    }
+  StatVTK(BaseComponent* comp, const std::string& statName,
+          const std::string& statSubId, Params& statParams);
 
 
-//  void dumpLocalData() override;
 
-//  void dumpGlobalData() override;
+  void registerOutputFields(StatisticFieldsOutput* statOutput) override;
+  void outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUSED(EndOfSimFlag)) override;
 
-//  void globalReduce(ParallelRuntime *rt) override;
+  void addData_impl(uint64_t time, int port, double intensity) override;
 
-//  void clear() override;
+  void addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) override;
 
-//  void collect_new_intensity(TimeDelta time, int port, double intens);
+  //  static void outputExodus(const std::string& fileroot,
+  //      std::multimap<uint64_t, traffic_event>&& traffMap,
+  //      const display_config& cfg,
+  //      Topology *topo =nullptr);
 
-//  void collect_new_color(TimeDelta time, int port, double color);
+  //  int id() const {
+  //    return id_;
+  //  }
 
-//  void reduce(StatCollector *coll) override;
-
-//  void finalize(TimeDelta t) override;
-
-//  StatCollector* doClone(SST::Params& params) const override {
-//    return new StatVTK(params);
-//  }
-
-//  int id() const {
-//    return id_;
-//  }
-
-//  void configure(SwitchId sid, hw::Topology* top);
+  //  void configure(SwitchId sid, hw::Topology* top);
 
  private:
   /**

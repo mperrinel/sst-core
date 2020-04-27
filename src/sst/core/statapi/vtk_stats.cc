@@ -402,9 +402,9 @@ namespace Statistics {
 //}
 
 
-StatVTK::StatVTK(BaseComponent* comp, const std::string& name,
-                 const std::string& subName, Params& params) :
-  MultiStatistic<TimeDelta, int, double>(comp, name, subName, params), active_(true)
+StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
+                 const std::string& statSubId, Params& statParams) :
+  MultiStatistic<TimeDelta, int, double>(comp, statName, statSubId, statParams), active_(true)
 {
 //  min_interval_ = sstmac::TimeDelta(params.find<SST::UnitAlgebra>("min_interval", "1us").getValue().toDouble());
 //  display_cfg_.bidirectional_shift = params.find<double>("bidirectional_shift", 0.02);
@@ -445,24 +445,30 @@ StatVTK::registerOutputFields(StatisticFieldsOutput * /*statOutput*/)
 {
 }
 
-void
-StatVTK::outputStatisticFields(StatisticFieldsOutput * /*statOutput*/, bool  /*endOfSim*/)
+void StatVTK::outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUSED(EndOfSimFlag))
 {
+    //  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
+    //                            display_cfg_, Topology::global());
 }
 
+void StatVTK::addData_impl(uint64_t time, int port, double intensity) {
 
+// TODO
+// update the traffic_event_map with the a new traffic event
+//
+//StatVTK* contribution = safe_cast(StatVTK, element);
 
+////  for (const traffic_event& e : contribution->sorted_event_list_){
+////    traffic_event_map_.emplace(e.time_, e);
+////  }
 
-//void
-//StatVTK::reduce(StatCollector* element)
-//{
-//  StatVTK* contribution = safe_cast(StatVTK, element);
+}
 
-//  for (const traffic_event& e : contribution->sorted_event_list_){
-//    traffic_event_map_.emplace(e.time_, e);
-//  }
+void StatVTK::addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) {
+// TODO
 
-//}
+}
+
 
 //void
 //StatVTK::finalize(TimeDelta t)
@@ -486,24 +492,6 @@ StatVTK::outputStatisticFields(StatisticFieldsOutput * /*statOutput*/, bool  /*e
 //    }
 //  }
 
-//}
-
-//void
-//StatVTK::dumpGlobalData()
-//{
-//  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
-//                            display_cfg_, Topology::global());
-//}
-
-//void
-//StatVTK::dumpLocalData()
-//{
-//  //if I want a file per node/switch
-//}
-
-//void
-//StatVTK::clear()
-//{
 //}
 
 //void
