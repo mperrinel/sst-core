@@ -11,6 +11,7 @@
 
 #include "sst_config.h"
 #include "sst/core/statapi/statoutputexodus.h"
+#include "sst/core/statapi/vtk_stats.h"
 
 #include "sst/core/simulation.h"
 #include "sst/core/stringize.h"
@@ -22,6 +23,7 @@ namespace Statistics {
 StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
     : StatisticOutput (outputParameters)
 {
+  std::cout<<"StatisticOutputEXODUS::StatisticOutputEXODUS"<<std::endl;
     // Announce this output object's name
     Output &out = Simulation::getSimulationOutput();
     out.verbose(CALL_INFO, 1, 0, " : StatisticOutputEXODUS enabled...\n");
@@ -34,9 +36,15 @@ StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
 
 
 void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) {
- // TODO
- // Cast the statistic into the statVTK subclass
-  //  traffic_progress_map_.insert({data.time_, data});
+  std::cout<<"StatisticOutputEXODUS::output"<<std::endl;
+  StatVTK* vtkStat = dynamic_cast<StatVTK *>(statistic);
+  this->lock();
+  vtkStat->outputStatistic(this, endOfSimFlag);
+  for (const auto & eventIte : vtkStat->getEvents()){
+    std::cout<<"StatisticOutputEXODUS::current event " << eventIte.first<<std::endl;
+
+  }
+  this->unlock();
 }
 
 //void StatisticOutputEXODUS::addOptionnalCallBack(std::function<void (const std::multimap<uint64_t, traffic_event> &, int, int)> callBack){
@@ -46,6 +54,7 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
 
 bool StatisticOutputEXODUS::checkOutputParameters()
 {
+  std::cout<<"StatisticOutputEXODUS::checkOutputParameters"<<std::endl;
     bool foundKey;
     std::string topHeaderFlag;
     std::string simTimeFlag;
@@ -116,6 +125,7 @@ void StatisticOutputEXODUS::closeFile(void)
 
 void StatisticOutputEXODUS::registerStatistic(StatisticBase *stat)
 {
+  std::cout << "StatisticOutputEXODUS::registerStatistic"<< std::endl;
 //    startRegisterFields(stat);
 //    stat->registerOutputFields(this);
 //    stopRegisterFields();
@@ -123,11 +133,12 @@ void StatisticOutputEXODUS::registerStatistic(StatisticBase *stat)
 
 void StatisticOutputEXODUS::startOutputGroup(StatisticGroup *grp)
 {
+  std::cout << "StatisticOutputEXODUS::startOutputGroup"<< std::endl;
 }
 
 void StatisticOutputEXODUS::stopOutputGroup()
 {
-      //  std::cout << "StatisticOutputEXODUS::implStopOutputGroup"<< std::endl;
+        std::cout << "StatisticOutputEXODUS::startOutputGroup"<< std::endl;
 
       //  //DUMP FOR TRAFFIC
       //  std::cout << "StatisticOutputEXODUS::traffic_progress_map_ size  "<< traffic_progress_map_.size()<< std::endl;
@@ -165,10 +176,12 @@ void StatisticOutputEXODUS::stopOutputGroup()
 
 void StatisticOutputEXODUS::startRegisterGroup(StatisticGroup *grp)
 {
+  std::cout << "StatisticOutputEXODUS::startRegisterGroup"<< std::endl;
 }
 
 void StatisticOutputEXODUS::stopRegisterGroup()
 {
+  std::cout << "StatisticOutputEXODUS::stopRegisterGroup"<< std::endl;
 }
 
 } //namespace Statistics

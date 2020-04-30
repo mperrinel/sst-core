@@ -30,8 +30,8 @@ public:
     SST_ELI_REGISTER_DERIVED(
       StatisticOutput,
       StatisticOutputEXODUS,
-      "macro",
-      "exo",
+      "sst",
+      "statisticoutputexodus",
       SST_ELI_ELEMENT_VERSION(1,0,0),
       "writes exodus output");
 
@@ -40,7 +40,7 @@ public:
      */
     StatisticOutputEXODUS(Params& outputParameters);
 
-    void output(StatisticBase* statistic, bool endOfSimFlag);
+    void output(StatisticBase* statistic, bool endOfSimFlag) override;
 
 protected:
     /** Perform a check of provided parameters
@@ -62,14 +62,13 @@ protected:
     void endOfSimulation() override;
 
 private:
-    // Start / Stop of register Fields
-    virtual void registerStatistic(StatisticBase *stat);
+    void registerStatistic(StatisticBase *stat) override;
 
-    virtual void startOutputGroup(StatisticGroup* group);
-    virtual void stopOutputGroup();
+    void startOutputGroup(StatisticGroup* group) override;
+    void stopOutputGroup() override;
 
-    virtual void startRegisterGroup(StatisticGroup* group);
-    virtual void stopRegisterGroup();
+    void startRegisterGroup(StatisticGroup* group) override;
+    void stopRegisterGroup();
 
 protected:
     StatisticOutputEXODUS() {;} // For serialization
