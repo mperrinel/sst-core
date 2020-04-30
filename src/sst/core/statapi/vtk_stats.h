@@ -30,6 +30,15 @@ namespace Statistics {
 class Topology;
 #define TimeDelta   uint64_t
 
+/**
+ * @brief The traffic_event struct
+ * A traffic event contains the collected data through the StatVTK
+ * time  = this is the time of the event.
+ * port  = this is a the port on which the collection is done
+ * color = this is the value (a double) that is written as a VTK state
+ *         at a given timepoint. Depending on configuration,
+ *         either intensity or level could be written as the color
+*/
 struct traffic_event {
   uint64_t time_; // progress time
   int port_;
@@ -39,8 +48,8 @@ struct traffic_event {
   mutable double color_;
   int id_;
 
-  traffic_event(uint64_t t, int port, double c, int id) :
-    time_(t), port_(port), color_(c), id_(id)
+  traffic_event(uint64_t t, int port, double color, int id) :
+    time_(t), port_(port), color_(color), id_(id)
   {
   }
 };
@@ -126,8 +135,8 @@ class StatVTK : public MultiStatistic<TimeDelta, int, double>
 
   SST_ELI_DECLARE_STATISTIC_TEMPLATE(
       StatVTK,
-      "macro",
-      "stat_vtk",
+      "sst",
+      "StatVTK",
       SST_ELI_ELEMENT_VERSION(1,0,0),
       "Collect intensity at each time point for every component",
       "Statistic<int,int,double>")
@@ -151,6 +160,9 @@ class StatVTK : public MultiStatistic<TimeDelta, int, double>
           const std::string& statSubId, Params& statParams);
 
 
+  void registerOutput(StatisticOutput* statOutput);
+  void outputStatistic(StatisticOutput* statOutput, bool UNUSED(EndOfSimFlag));
+
 
   void registerOutputFields(StatisticFieldsOutput* statOutput) override;
   void outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUSED(EndOfSimFlag)) override;
@@ -159,6 +171,7 @@ class StatVTK : public MultiStatistic<TimeDelta, int, double>
 
   void addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) override;
 
+  const std::multimap<uint64_t, traffic_event>& getEvents() const;
   //  static void outputExodus(const std::string& fileroot,
   //      std::multimap<uint64_t, traffic_event>&& traffMap,
   //      const display_config& cfg,

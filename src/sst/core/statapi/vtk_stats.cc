@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Questions? Contact sst-macro-help@sandia.gov
 */
 #include "sst/core/statapi/vtk_stats.h"
-//#include <sstmac/hardware/vtk/vtkTrafficSource.h>
+//#include "sst/core/statapi/vtkTrafficSource.h"
 //#include <sstmac/backends/common/parallel_runtime.h>
 //#include <sstmac/hardware/topology/topology.h>
 //#include <sprockit/util.h>
@@ -406,6 +406,8 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
   MultiStatistic<TimeDelta, int, double>(comp, statName, statSubId, statParams), active_(true)
 {
+  std::cout<<"StatVTK::StatVTK"<<std::endl;
+
 //  min_interval_ = sstmac::TimeDelta(params.find<SST::UnitAlgebra>("min_interval", "1us").getValue().toDouble());
 //  display_cfg_.bidirectional_shift = params.find<double>("bidirectional_shift", 0.02);
 //  display_cfg_.highlight_link_color = params.find<double>("highlight_link_color", 1.0);
@@ -441,33 +443,52 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
 }
 
 void
+StatVTK::registerOutput(StatisticOutput * /*statOutput*/)
+{
+  std::cout<<"StatVTK::registerOutput"<<std::endl;
+
+}
+
+void StatVTK::outputStatistic(StatisticOutput* statOutput, bool UNUSED(EndOfSimFlag))
+{
+  std::cout<<"StatVTK::outputStatistic"<<std::endl;
+    //  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
+    //                            display_cfg_, Topology::global());
+}
+
+
+void
 StatVTK::registerOutputFields(StatisticFieldsOutput * /*statOutput*/)
 {
+  std::cout<<"StatVTK::registerOutputFields"<<std::endl;
+
 }
 
 void StatVTK::outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUSED(EndOfSimFlag))
 {
+  std::cout<<"StatVTK::outputStatisticFields"<<std::endl;
     //  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
     //                            display_cfg_, Topology::global());
 }
 
 void StatVTK::addData_impl(uint64_t time, int port, double intensity) {
 
-// TODO
-// update the traffic_event_map with the a new traffic event
-//
-//StatVTK* contribution = safe_cast(StatVTK, element);
-
-////  for (const traffic_event& e : contribution->sorted_event_list_){
-////    traffic_event_map_.emplace(e.time_, e);
-////  }
-
+  // Update the traffic_event_map with the a new traffic event
+  std::cout<<"StatVTK::addData_impl"<<std::endl;
+  traffic_event event(time, port, intensity, 0);
+  traffic_event_map_.emplace(event.time_, event);
 }
 
 void StatVTK::addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) {
-// TODO
+  // TODO
+  std::cout<<"StatVTK::addData_impl_Ntimes"<<std::endl;
 
 }
+
+const std::multimap<uint64_t, traffic_event>& StatVTK::getEvents() const {
+  return traffic_event_map_;
+}
+
 
 
 //void
