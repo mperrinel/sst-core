@@ -18,17 +18,9 @@
 #include "sst/core/statapi/statbase.h"
 #include "sst/core/statapi/statoutput.h"
 
-#if SSTMAC_INTEGRATED_SST_CORE
-#include <sst/core/statapi/statfieldinfo.h>
-//#include <sst/core/sst_types.h>
-using namespace SST;
-#endif
-
 namespace SST {
 namespace Statistics {
 
-class Topology;
-#define TimeDelta   uint64_t
 
 /**
  * @brief The traffic_event struct
@@ -127,19 +119,19 @@ struct vtk_port {
 };
 
 
-class StatVTK : public MultiStatistic<TimeDelta, int, double>
+class StatVTK : public MultiStatistic<uint64_t, int, double>
 {
-  using Parent=MultiStatistic<TimeDelta,int,double>;
+  using Parent=MultiStatistic<uint64_t,int,double>;
 
   public:
-
-  SST_ELI_DECLARE_STATISTIC_TEMPLATE(
+  SST_ELI_REGISTER_MULTI_STATISTIC(
+      Parent,
       StatVTK,
       "sst",
       "StatVTK",
       SST_ELI_ELEMENT_VERSION(1,0,0),
       "Collect intensity at each time point for every component",
-      "Statistic<int,int,double>")
+      "SST::MultiStatistic<uint64_t, int, double>")
 
   struct display_config {
     double idle_switch_color;
@@ -198,13 +190,13 @@ class StatVTK : public MultiStatistic<TimeDelta, int, double>
   struct port_state {
     int active_ports;
     int congested_ports;
-    TimeDelta last_collection;
-    TimeDelta pending_collection_start;
+    uint64_t last_collection;
+    uint64_t pending_collection_start;
     int current_level;
     double accumulated_color;
     double current_color;
     double active_vtk_color;
-    TimeDelta last_wait_finished;
+    uint64_t last_wait_finished;
     port_state() :
       accumulated_color(0.),
       current_level(0)
@@ -222,7 +214,7 @@ class StatVTK : public MultiStatistic<TimeDelta, int, double>
 
   std::vector<int> intensity_levels_;
   std::vector<port_state> port_states_;
-  TimeDelta min_interval_;
+  uint64_t min_interval_;
   int id_;
 
   std::vector<std::pair<int,int> > filters_;
