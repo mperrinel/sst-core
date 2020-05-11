@@ -407,7 +407,7 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
   MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), active_(true)
 {
   std::cout<<"StatVTK::StatVTK"<<std::endl;
-  this->setStatisticTypeName("VTK");
+  this->setStatisticTypeName("StatVTK");
 
 //  min_interval_ = sstmac::TimeDelta(params.find<SST::UnitAlgebra>("min_interval", "1us").getValue().toDouble());
 //  display_cfg_.bidirectional_shift = params.find<double>("bidirectional_shift", 0.02);

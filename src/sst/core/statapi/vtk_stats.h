@@ -118,20 +118,17 @@ struct vtk_port {
   }
 };
 
-
 class StatVTK : public MultiStatistic<uint64_t, int, double>
 {
-  using Parent=MultiStatistic<uint64_t,int,double>;
 
-  public:
+public:
   SST_ELI_REGISTER_MULTI_STATISTIC(
-      Parent,
       StatVTK,
       "sst",
       "StatVTK",
       SST_ELI_ELEMENT_VERSION(1,0,0),
       "Collect intensity at each time point for every component",
-      "SST::MultiStatistic<uint64_t, int, double>")
+      uint64_t,int,double)
 
   struct display_config {
     double idle_switch_color;
@@ -175,7 +172,7 @@ class StatVTK : public MultiStatistic<uint64_t, int, double>
 
   //  void configure(SwitchId sid, hw::Topology* top);
 
- private:
+private:
   /**
    * @brief The port_state struct
    * The VTK collection has 3 different types of quantities
@@ -219,12 +216,12 @@ class StatVTK : public MultiStatistic<uint64_t, int, double>
 
   std::vector<std::pair<int,int> > filters_;
 
-//  display_config display_cfg_;
+  //  display_config display_cfg_;
 
   std::set<traffic_event, compare_events> sorted_event_list_;
 
   std::multimap<uint64_t, traffic_event> traffic_event_map_;
-//  hw::Topology* top_;
+  //  hw::Topology* top_;
 
   bool active_;
   bool flicker_;

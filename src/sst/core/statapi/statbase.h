@@ -458,7 +458,7 @@ class Statistic<void> : public StatisticBase
     virtual ~Statistic(){}
 
 private:
-    Statistic(){} // For serialization only
+    Statistic(){} // For serialization onlySST_ELI_INSTANTIATE_STATISTIC
 
 };
 
@@ -524,9 +524,9 @@ struct ImplementsStatFields {
   struct cls##_##field##_##shortName : public cls<field> { \
     cls##_##field##_##shortName(SST::BaseComponent* bc, const std::string& sn, \
            const std::string& si, SST::Params& p) : \
-      cls<field>(bc,sn,si,p) { std::cout<< "stats is created" << typeid(cls##_##field##_##shortName).name() << std::endl;} \
+      cls<field>(bc,sn,si,p) {} \
   static bool ELI_isLoaded() { \
-     bool isLoad = SST::ELI::InstantiateBuilderInfo< \
+     return SST::ELI::InstantiateBuilderInfo< \
         SST::Statistics::Statistic<field>,cls##_##field##_##shortName>::isLoaded() \
          && SST::ELI::InstantiateBuilder< \
         SST::Statistics::Statistic<field>,cls##_##field##_##shortName>::isLoaded() \
@@ -536,11 +536,8 @@ struct ImplementsStatFields {
          && SST::ELI::InstantiateBuilder< \
         SST::Statistics::Statistic<field>, \
         SST::Statistics::NullStatistic<field>>::isLoaded(); \
-  std::cout<< "Stat is load" << isLoad << std::endl; \
-  return isLoad; \
    } \
   };
-
 
 #define PP_NARG(...) PP_NARG_(__VA_ARGS__, PP_NSEQ())
 #define PP_NARG_(...) PP_ARG_N(__VA_ARGS__)
@@ -563,7 +560,7 @@ struct ImplementsStatFields {
     name(SST::BaseComponent* bc, const std::string& sn, \
          const std::string& si, SST::Params& p) : \
       cls<__VA_ARGS__>(bc,sn,si,p) {} \
-    bool ELI_isLoaded() const { \
+    static bool ELI_isLoaded() { \
      return SST::ELI::InstantiateBuilderInfo< \
         SST::Statistics::Statistic<tuple>,name>::isLoaded() \
          && SST::ELI::InstantiateBuilder< \
@@ -580,41 +577,17 @@ struct ImplementsStatFields {
 #define SST_ELI_INSTANTIATE_MULTI_STATISTIC(cls,...) \
   MAKE_MULTI_STATISTIC(cls,STAT_GLUE_NAME(cls,__VA_ARGS__),STAT_TUPLE(__VA_ARGS__),__VA_ARGS__)
 
-#define MAKE_MULTI_STATISTIC_NO_TEMPLATE(cls,name,tuple,...) \
-  struct name : public cls { \
-    name(SST::BaseComponent* bc, const std::string& sn, \
-         const std::string& si, SST::Params& p) : \
-      cls(bc,sn,si,p) {     std::cout<< "MultiStat is created" << typeid(name).name() << std::endl; \
-} \
-    bool ELI_isLoaded() const { \
-  bool isLoad= SST::ELI::InstantiateBuilderInfo< \
-     SST::Statistics::Statistic<tuple>,name>::isLoaded() \
-      && SST::ELI::InstantiateBuilder< \
-     SST::Statistics::Statistic<tuple>,name>::isLoaded() \
-      && SST::ELI::InstantiateBuilderInfo< \
-     SST::Statistics::Statistic<tuple>, \
-     SST::Statistics::NullStatistic<tuple>>::isLoaded() \
-      && SST::ELI::InstantiateBuilder< \
-     SST::Statistics::Statistic<tuple>, \
-     SST::Statistics::NullStatistic<tuple>>::isLoaded(); \
-    std::cout<< "MultiStat is load" << isLoad << std::endl; \
-    return isLoad; \
-     } \
-  };
-
-#define SST_ELI_INSTANTIATE_MULTI_STATISTIC_NO_TEMPLATE(cls,...) \
-  MAKE_MULTI_STATISTIC_NO_TEMPLATE(cls,STAT_GLUE_NAME(cls,__VA_ARGS__),STAT_TUPLE(__VA_ARGS__),__VA_ARGS__)
-
-#define SST_ELI_REGISTER_MULTI_STATISTIC(parent,cls,lib,name,version,desc, interface) \
-  bool ELI_isLoaded() const{ \
-  bool isLoad= SST::ELI::InstantiateBuilderInfo< \
-     parent,cls>::isLoaded() \
-      && SST::ELI::InstantiateBuilder< \
-     parent,cls>::isLoaded(); \
-    return isLoad; \
-  } \
-  SST_ELI_DEFAULT_INFO(lib,name,ELI_FORWARD_AS_ONE(version),desc) \
-  SST_ELI_INTERFACE_INFO(interface)
+#define SST_ELI_REGISTER_MULTI_STATISTIC(cls,lib,name,version,desc,...) \
+  SST_ELI_REGISTER_DERIVED(SST::Statistics::MultiStatistic<ELI_FORWARD_AS_ONE(__VA_ARGS__)>,cls,lib,name,ELI_FORWARD_AS_ONE(version),desc) \
+  SST_ELI_INTERFACE_INFO(#cls) \
+  static bool ELI_forceNullLoad() { \
+     return SST::ELI::InstantiateBuilderInfo< \
+       SST::Statistics::Statistic<STAT_TUPLE(__VA_ARGS__)>, \
+       SST::Statistics::NullStatistic<STAT_TUPLE(__VA_ARGS__)>>::isLoaded() \
+     && SST::ELI::InstantiateBuilder< \
+       SST::Statistics::Statistic<STAT_TUPLE(__VA_ARGS__)>, \
+       SST::Statistics::NullStatistic<STAT_TUPLE(__VA_ARGS__)>>::isLoaded(); \
+  }
 
 } //namespace Statistics
 } //namespace SST
