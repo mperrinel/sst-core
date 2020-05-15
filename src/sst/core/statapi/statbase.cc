@@ -19,8 +19,10 @@
 #include "sst/core/statapi/statuniquecount.h"
 #include "sst/core/statapi/statoutputconsole.h"
 #include "sst/core/statapi/statoutputcsv.h"
+#include "sst/core/statapi/statoutputexodus.h"
 #include "sst/core/statapi/statoutputjson.h"
 #include "sst/core/statapi/statoutputtxt.h"
+#include "sst/core/statapi/vtk_stats.h"
 
 namespace SST {
 namespace Statistics {
@@ -206,6 +208,7 @@ SST_ELI_INSTANTIATE_STATISTIC(UniqueCountStatistic, int64_t);
 SST_ELI_INSTANTIATE_STATISTIC(UniqueCountStatistic, uint64_t);
 SST_ELI_INSTANTIATE_STATISTIC(UniqueCountStatistic, float);
 SST_ELI_INSTANTIATE_STATISTIC(UniqueCountStatistic, double);
+
 
 } //namespace Statistics
 } //namespace SST

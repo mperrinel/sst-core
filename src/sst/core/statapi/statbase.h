@@ -458,7 +458,7 @@ class Statistic<void> : public StatisticBase
     virtual ~Statistic(){}
 
 private:
-    Statistic(){} // For serialization only
+    Statistic(){} // For serialization onlySST_ELI_INSTANTIATE_STATISTIC
 
 };
 
@@ -539,7 +539,6 @@ struct ImplementsStatFields {
    } \
   };
 
-
 #define PP_NARG(...) PP_NARG_(__VA_ARGS__, PP_NSEQ())
 #define PP_NARG_(...) PP_ARG_N(__VA_ARGS__)
 #define PP_ARG_N(_1,_2,_3,_4,_5,N,...) N
@@ -561,7 +560,7 @@ struct ImplementsStatFields {
     name(SST::BaseComponent* bc, const std::string& sn, \
          const std::string& si, SST::Params& p) : \
       cls<__VA_ARGS__>(bc,sn,si,p) {} \
-    bool ELI_isLoaded() const { \
+    static bool ELI_isLoaded() { \
      return SST::ELI::InstantiateBuilderInfo< \
         SST::Statistics::Statistic<tuple>,name>::isLoaded() \
          && SST::ELI::InstantiateBuilder< \
@@ -578,7 +577,17 @@ struct ImplementsStatFields {
 #define SST_ELI_INSTANTIATE_MULTI_STATISTIC(cls,...) \
   MAKE_MULTI_STATISTIC(cls,STAT_GLUE_NAME(cls,__VA_ARGS__),STAT_TUPLE(__VA_ARGS__),__VA_ARGS__)
 
-
+#define SST_ELI_REGISTER_MULTI_STATISTIC(cls,lib,name,version,desc,...) \
+  SST_ELI_REGISTER_DERIVED(SST::Statistics::MultiStatistic<ELI_FORWARD_AS_ONE(__VA_ARGS__)>,cls,lib,name,ELI_FORWARD_AS_ONE(version),desc) \
+  SST_ELI_INTERFACE_INFO(#cls) \
+  static bool ELI_forceNullLoad() { \
+     return SST::ELI::InstantiateBuilderInfo< \
+       SST::Statistics::Statistic<STAT_TUPLE(__VA_ARGS__)>, \
+       SST::Statistics::NullStatistic<STAT_TUPLE(__VA_ARGS__)>>::isLoaded() \
+     && SST::ELI::InstantiateBuilder< \
+       SST::Statistics::Statistic<STAT_TUPLE(__VA_ARGS__)>, \
+       SST::Statistics::NullStatistic<STAT_TUPLE(__VA_ARGS__)>>::isLoaded(); \
+  }
 
 } //namespace Statistics
 } //namespace SST
