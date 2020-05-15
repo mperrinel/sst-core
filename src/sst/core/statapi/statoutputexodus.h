@@ -15,6 +15,7 @@
 #include "sst/core/sst_types.h"
 
 #include "sst/core/statapi/statoutput.h"
+#include "sst/core/statapi/vtk_stats.h"
 
 namespace SST {
 namespace Statistics {
@@ -78,22 +79,8 @@ private:
     void closeFile();
 
 private:
-    FILE*                    m_hFile;
     std::string              m_FilePath;
-    std::string              m_currentComponentName;
-    std::string              m_currentStatisticName;
-    std::string              m_currentStatisticSubId;
-    std::string              m_currentStatisticType;
-    bool                     m_outputSimTime;
-    bool                     m_outputRank;
-    bool					 m_firstEntry;
-    bool					 m_firstField;
-    bool 					 m_processedAnyStats;
-    int						 m_curIndentLevel;
-
-//    std::vector<SST::Statistics::StatisticGroup *> m_statGroups;
-//    std::multimap<uint64_t, traffic_event> traffic_progress_map_;
-//    std::function<void (std::multimap<uint64_t, traffic_event>, int, int)> callBackFct;
+    std::multimap<uint64_t, traffic_event> m_traffic_progress_map;
 
 };
 

@@ -11,7 +11,6 @@
 
 #include "sst_config.h"
 #include "sst/core/statapi/statoutputexodus.h"
-#include "sst/core/statapi/vtk_stats.h"
 
 #include "sst/core/simulation.h"
 #include "sst/core/stringize.h"
@@ -23,43 +22,32 @@ namespace Statistics {
 StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
     : StatisticOutput (outputParameters)
 {
-  std::cout<<"StatisticOutputEXODUS::StatisticOutputEXODUS"<<std::endl;
     // Announce this output object's name
     Output &out = Simulation::getSimulationOutput();
     out.verbose(CALL_INFO, 1, 0, " : StatisticOutputEXODUS enabled...\n");
     setStatisticOutputName("StatisticOutputEXODUS");
 
-    m_currentComponentName = "";
-    m_firstEntry = false;
-    m_processedAnyStats = false;
 }
 
 
 void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) {
-  std::cout<<"StatisticOutputEXODUS::output"<<std::endl;
-  StatVTK* vtkStat = dynamic_cast<StatVTK *>(statistic);
   this->lock();
-  vtkStat->outputStatistic(this, endOfSimFlag);
-  for (const auto & eventIte : vtkStat->getEvents()){
-    std::cout<<"StatisticOutputEXODUS::current event " << eventIte.first<<std::endl;
 
+  if(endOfSimFlag)
+  {
+    StatVTK* vtkStat = dynamic_cast<StatVTK *>(statistic);
+    vtkStat->outputStatistic(this, endOfSimFlag);
+    for (const auto & eventIte : vtkStat->getEvents()) {
+      m_traffic_progress_map.insert(eventIte);
+    }
+
+    this->unlock();
   }
-  this->unlock();
 }
-
-//void StatisticOutputEXODUS::addOptionnalCallBack(std::function<void (const std::multimap<uint64_t, traffic_event> &, int, int)> callBack){
-//  std::cout << "StatisticOutputEXODUS::addOptionnalCallBack" << std::endl;
-//  callBackFct = callBack;
-//}
 
 bool StatisticOutputEXODUS::checkOutputParameters()
 {
-  std::cout<<"StatisticOutputEXODUS::checkOutputParameters"<<std::endl;
     bool foundKey;
-    std::string topHeaderFlag;
-    std::string simTimeFlag;
-    std::string rankFlag;
-
     // Review the output parameters and make sure they are correct, and
     // also setup internal variables
 
@@ -71,11 +59,7 @@ bool StatisticOutputEXODUS::checkOutputParameters()
 
     // Get the parameters
     m_FilePath = getOutputParameters().find<std::string>("filepath", "./vtkStatisticOutput.e");
-    simTimeFlag = getOutputParameters().find<std::string>("outputsimtime", "1");
-    rankFlag = getOutputParameters().find<std::string>("outputrank", "1");
 
-    m_outputSimTime = ("1" == simTimeFlag);
-    m_outputRank = ("1" == rankFlag);
 
     if (0 == m_FilePath.length()) {
         // Filepath is zero length
@@ -99,19 +83,45 @@ void StatisticOutputEXODUS::printUsage()
 
 void StatisticOutputEXODUS::startOfSimulation()
 {
-  std::cout << "StatisticOutputEXODUS::startOfSimulation"<< std::endl;
-
     // Open the finalized filename
    if ( ! openFile() )
         return;
-
 }
 
 void StatisticOutputEXODUS::endOfSimulation()
 {
-  std::cout << "StatisticOutputEXODUS::endOfSimulation"<< std::endl;
-    // Close the file
-    closeFile();
+  //  StatVTK::outputExodus(m_FilePath, traffic_progress_map_, Topology::global());
+
+  std::multimap<std::string, std::multimap<uint64_t, int>> tf_nodes_map;
+    for (const auto & eventIte : m_traffic_progress_map){
+      auto nodeId = eventIte.second.compName_;
+      auto portId = eventIte.second.port_;
+      auto nodIdPortIdKey = nodeId +":"+ std::to_string(portId);
+      auto resIt = tf_nodes_map.find(nodIdPortIdKey);
+      if(resIt == tf_nodes_map.cend()){
+        auto map = std::multimap<uint64_t, int>{};
+        map.insert({eventIte.first, eventIte.second.color_});
+
+        tf_nodes_map.insert({nodIdPortIdKey, map});
+      } else {
+        auto &map = resIt->second;
+        map.insert({eventIte.first, eventIte.second.color_});
+      }
+    }
+
+    //  TORM: display the map in the console
+    for (const auto & nodeIte : tf_nodes_map){
+         auto NodeId = nodeIte.first;
+         const auto &map = nodeIte.second;
+         std::cout<<NodeId<<"::: ";
+         for(auto itMap = map.cbegin(); itMap != map.cend(); ++itMap){
+           std::cout <<  itMap->second << "  ";
+         }
+         std::cout<<std::endl;
+       }
+
+  // Close the file
+  closeFile();
 }
 
 bool StatisticOutputEXODUS::openFile(void)
@@ -125,63 +135,23 @@ void StatisticOutputEXODUS::closeFile(void)
 
 void StatisticOutputEXODUS::registerStatistic(StatisticBase *stat)
 {
-  std::cout << "StatisticOutputEXODUS::registerStatistic"<< std::endl;
-//    startRegisterFields(stat);
-//    stat->registerOutputFields(this);
-//    stopRegisterFields();
+
 }
 
 void StatisticOutputEXODUS::startOutputGroup(StatisticGroup *grp)
 {
-  std::cout << "StatisticOutputEXODUS::startOutputGroup"<< std::endl;
 }
 
 void StatisticOutputEXODUS::stopOutputGroup()
 {
-        std::cout << "StatisticOutputEXODUS::startOutputGroup"<< std::endl;
-
-      //  //DUMP FOR TRAFFIC
-      //  std::cout << "StatisticOutputEXODUS::traffic_progress_map_ size  "<< traffic_progress_map_.size()<< std::endl;
-      //  std::multimap<std::string, std::multimap<int, int>> tf_nodes_map;
-      //  for (auto it = traffic_progress_map_.cbegin(); it != traffic_progress_map_.cend(); ++it){
-      //    auto nodeId = it->second.id_;
-      //    auto portId = it->second.port_;
-      //    auto nodIdPortIdKey = std::to_string(nodeId) +":"+ std::to_string(portId);
-      //    auto resIt = tf_nodes_map.find(nodIdPortIdKey);
-      //    if(resIt == tf_nodes_map.cend()){
-      //      auto map = std::multimap<int, int>{};
-      //      map.insert({it->first, it->second.color_});
-
-      //      tf_nodes_map.insert({nodIdPortIdKey, map});
-      //    } else {
-      //      auto &map = resIt->second;
-      //      map.insert({it->first, it->second.color_});
-      //    }
-      //  }
-
-      //  //  TORM: display the map in the console
-      //     for (auto it = tf_nodes_map.cbegin(); it != tf_nodes_map.cend(); ++it){
-      //       auto NodeId = it->first;
-      //       const auto &map = it->second;
-      //       std::cout<<NodeId<<":::";
-      //       for(auto it = map.cbegin(); it != map.cend(); ++it){
-      //         std::cout<< it->second << " ";
-      //       }
-      //       std::cout<<std::endl;
-      //     }
-
-      //  StatVTK::outputExodus(m_FilePath, traffic_progress_map_, Topology::global());
-
 }
 
 void StatisticOutputEXODUS::startRegisterGroup(StatisticGroup *grp)
 {
-  std::cout << "StatisticOutputEXODUS::startRegisterGroup"<< std::endl;
 }
 
 void StatisticOutputEXODUS::stopRegisterGroup()
 {
-  std::cout << "StatisticOutputEXODUS::stopRegisterGroup"<< std::endl;
 }
 
 } //namespace Statistics
