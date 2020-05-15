@@ -406,8 +406,9 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
   MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), active_(true)
 {
-  std::cout<<"StatVTK::StatVTK"<<std::endl;
+  std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId <<std::endl;
   this->setStatisticTypeName("StatVTK");
+  lastTime_ = 0;
 
 //  min_interval_ = sstmac::TimeDelta(params.find<SST::UnitAlgebra>("min_interval", "1us").getValue().toDouble());
 //  display_cfg_.bidirectional_shift = params.find<double>("bidirectional_shift", 0.02);
@@ -446,13 +447,11 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
 void
 StatVTK::registerOutput(StatisticOutput * /*statOutput*/)
 {
-  std::cout<<"StatVTK::registerOutput"<<std::endl;
 
 }
 
 void StatVTK::outputStatistic(StatisticOutput* statOutput, bool UNUSED(EndOfSimFlag))
 {
-  std::cout<<"StatVTK::outputStatistic"<<std::endl;
     //  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
     //                            display_cfg_, Topology::global());
 }
@@ -461,28 +460,29 @@ void StatVTK::outputStatistic(StatisticOutput* statOutput, bool UNUSED(EndOfSimF
 void
 StatVTK::registerOutputFields(StatisticFieldsOutput * /*statOutput*/)
 {
-  std::cout<<"StatVTK::registerOutputFields"<<std::endl;
 
 }
 
 void StatVTK::outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUSED(EndOfSimFlag))
 {
-  std::cout<<"StatVTK::outputStatisticFields"<<std::endl;
-    //  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
-    //                            display_cfg_, Topology::global());
+
 }
 
 void StatVTK::addData_impl(uint64_t time, int port, double intensity) {
 
   // Update the traffic_event_map with the a new traffic event
-  std::cout<<"StatVTK::addData_impl"<<std::endl;
-  traffic_event event(time, port, intensity, 0);
-  traffic_event_map_.emplace(event.time_, event);
+  lastTime_ = time;
+  auto it = traffic_event_map_.find(time);
+  if(it == traffic_event_map_.cend()){
+    traffic_event event(time, port, intensity, this->getCompName());
+    traffic_event_map_.emplace(event.time_, event);
+  }
+  else {
+    it->second.color_ = intensity;
+  }
 }
 
 void StatVTK::addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) {
-  // TODO
-  std::cout<<"StatVTK::addData_impl_Ntimes"<<std::endl;
 
 }
 

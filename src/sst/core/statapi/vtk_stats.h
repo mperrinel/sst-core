@@ -38,10 +38,10 @@ struct traffic_event {
   //C++ sets that does not allow modifying items in the set
   //even after collision
   mutable double color_;
-  int id_;
+  std::string compName_;
 
-  traffic_event(uint64_t t, int port, double color, int id) :
-    time_(t), port_(port), color_(color), id_(id)
+  traffic_event(uint64_t t, int port, double color, std::string compName) :
+    time_(t), port_(port), color_(color), compName_(compName)
   {
   }
 };
@@ -204,7 +204,7 @@ private:
   struct compare_events {
     bool operator()(const traffic_event& l, const traffic_event& r){
       if (l.time_ != r.time_) return l.time_ < r.time_;
-      if (l.id_ != r.id_) return l.id_ < r.id_;
+      if (l.compName_ != r.compName_) return l.compName_ < r.compName_;
       return l.port_ < r.port_;
     }
   };
@@ -220,6 +220,7 @@ private:
 
   std::set<traffic_event, compare_events> sorted_event_list_;
 
+  uint64_t lastTime_;
   std::multimap<uint64_t, traffic_event> traffic_event_map_;
   //  hw::Topology* top_;
 
