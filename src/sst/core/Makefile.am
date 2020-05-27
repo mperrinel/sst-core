@@ -353,7 +353,7 @@ sst_core_sources +=  \
 nobase_dist_sst_HEADERS += \
 	statapi/statoutputexodus.h \
 	statapi/vtk_stats.h
-sstsim_x_LDADD += $(VTK_LDFLAGS)
-sstinfo_x_LDADD += $(VTK_LDFLAGS)
+sstsim_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
+sstinfo_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
 endif
 
