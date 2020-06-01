@@ -44,6 +44,32 @@ struct traffic_event {
     time_(t), port_(port), color_(color), compName_(compName)
   {
   }
+
+};
+
+
+struct vtk_topology_cube {
+  std::string compName_;
+  int x_size_;
+  int y_size_;
+  int x_corner_;
+  int y_corner_;
+
+  vtk_topology_cube(std::string compName, int x_size, int y_size, int x_corner, int y_corner) :
+    compName_(compName), x_size_(x_size), y_size_(y_size), x_corner_(x_corner), y_corner_(y_corner)
+  {
+  }
+
+  vtk_topology_cube() :
+    compName_("Default"), x_size_(0), y_size_(0), x_corner_(0), y_corner_(0)
+  {
+  }
+};
+
+struct compare_topology {
+  bool operator()(const vtk_topology_cube& l, const vtk_topology_cube& r){
+    return l.compName_ < r.compName_;
+  }
 };
 
 #define VTK_NUM_CELLS_PER_SWITCH 7
@@ -150,8 +176,6 @@ public:
 
 
   void registerOutput(StatisticOutput* statOutput);
-  void outputStatistic(StatisticOutput* statOutput, bool UNUSED(EndOfSimFlag));
-
 
   void registerOutputFields(StatisticFieldsOutput* statOutput) override;
   void outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUSED(EndOfSimFlag)) override;
@@ -161,16 +185,14 @@ public:
   void addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) override;
 
   const std::multimap<uint64_t, traffic_event>& getEvents() const;
-  //  static void outputExodus(const std::string& fileroot,
-  //      std::multimap<uint64_t, traffic_event>&& traffMap,
-  //      const display_config& cfg,
-  //      Topology *topo =nullptr);
+  vtk_topology_cube getTopology() const;
+  static void outputExodus(const std::string& fileroot,
+        std::multimap<uint64_t, traffic_event>&& traffMap,
+        std::set<vtk_topology_cube, compare_topology>&& vtkTopologyCube);
 
   //  int id() const {
   //    return id_;
   //  }
-
-  //  void configure(SwitchId sid, hw::Topology* top);
 
 private:
   /**
@@ -222,6 +244,7 @@ private:
 
   uint64_t lastTime_;
   std::multimap<uint64_t, traffic_event> traffic_event_map_;
+  vtk_topology_cube vtk_topology_cube_;
   //  hw::Topology* top_;
 
   bool active_;

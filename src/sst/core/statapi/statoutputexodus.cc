@@ -36,10 +36,11 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
   if(endOfSimFlag)
   {
     StatVTK* vtkStat = dynamic_cast<StatVTK *>(statistic);
-    vtkStat->outputStatistic(this, endOfSimFlag);
     for (const auto & eventIte : vtkStat->getEvents()) {
       m_traffic_progress_map.insert(eventIte);
     }
+
+    m_vtk_topology_cube_list_.insert(vtkStat->getTopology());
 
     this->unlock();
   }
@@ -90,38 +91,40 @@ void StatisticOutputEXODUS::startOfSimulation()
 
 void StatisticOutputEXODUS::endOfSimulation()
 {
-  //  StatVTK::outputExodus(m_FilePath, traffic_progress_map_, Topology::global());
 
   std::multimap<std::string, std::multimap<uint64_t, int>> tf_nodes_map;
-    for (const auto & eventIte : m_traffic_progress_map){
-      auto nodeId = eventIte.second.compName_;
-      auto portId = eventIte.second.port_;
-      auto nodIdPortIdKey = nodeId +":"+ std::to_string(portId);
-      auto resIt = tf_nodes_map.find(nodIdPortIdKey);
-      if(resIt == tf_nodes_map.cend()){
-        auto map = std::multimap<uint64_t, int>{};
-        map.insert({eventIte.first, eventIte.second.color_});
+  for (const auto & eventIte : m_traffic_progress_map){
+    auto nodeId = eventIte.second.compName_;
+    auto portId = eventIte.second.port_;
+    auto nodIdPortIdKey = nodeId +":"+ std::to_string(portId);
+    auto resIt = tf_nodes_map.find(nodIdPortIdKey);
+    if(resIt == tf_nodes_map.cend()){
+      auto map = std::multimap<uint64_t, int>{};
+      map.insert({eventIte.first, eventIte.second.color_});
 
-        tf_nodes_map.insert({nodIdPortIdKey, map});
-      } else {
-        auto &map = resIt->second;
-        map.insert({eventIte.first, eventIte.second.color_});
-      }
+      tf_nodes_map.insert({nodIdPortIdKey, map});
+    } else {
+      auto &map = resIt->second;
+      map.insert({eventIte.first, eventIte.second.color_});
     }
+  }
 
-    //  TORM: display the map in the console
-    for (const auto & nodeIte : tf_nodes_map){
-         auto NodeId = nodeIte.first;
-         const auto &map = nodeIte.second;
-         std::cout<<NodeId<<"::: ";
-         for(auto itMap = map.cbegin(); itMap != map.cend(); ++itMap){
-           std::cout <<  itMap->second << "  ";
-         }
-         std::cout<<std::endl;
-       }
+  //  TORM: display the map in the console
+  for (const auto & nodeIte : tf_nodes_map){
+    auto NodeId = nodeIte.first;
+    const auto &map = nodeIte.second;
+    std::cout<<NodeId<<"::: ";
+    for(auto itMap = map.cbegin(); itMap != map.cend(); ++itMap){
+      std::cout <<  itMap->second << "  ";
+    }
+    std::cout<<std::endl;
+  }
+
+  StatVTK::outputExodus(m_FilePath, std::move(m_traffic_progress_map), std::move(m_vtk_topology_cube_list_));
 
   // Close the file
   closeFile();
+
 }
 
 bool StatisticOutputEXODUS::openFile(void)
@@ -153,6 +156,13 @@ void StatisticOutputEXODUS::startRegisterGroup(StatisticGroup *grp)
 void StatisticOutputEXODUS::stopRegisterGroup()
 {
 }
+
+void StatisticOutputEXODUS::outputExodus(const std::string& fileroot)
+{
+  // Check if that should be better to fill the exodus file here using VTK or to keep
+  // the current behavior on StatVTK class.
+}
+
 
 } //namespace Statistics
 } //namespace SST

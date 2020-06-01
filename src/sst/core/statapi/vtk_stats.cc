@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Questions? Contact sst-macro-help@sandia.gov
 */
 #include "sst/core/statapi/vtk_stats.h"
-//#include "sst/core/statapi/vtkTrafficSource.h"
+#include "sst/core/statapi/vtkTrafficSource.h"
 //#include <sstmac/backends/common/parallel_runtime.h>
 //#include <sstmac/hardware/topology/topology.h>
 //#include <sprockit/util.h>
@@ -71,11 +71,16 @@ Questions? Contact sst-macro-help@sandia.gov
 //#include <vtkRenderWindowInteractor.h>
 //#include <vtkXMLUnstructuredGridWriter.h>
 //#include <vtkUnstructuredGrid.h>
-//#include <vtkPointData.h>
-//#include <vtkCellData.h>
 //#include <vtkVertexGlyphFilter.h>
 //#include "vtkStdString.h"
-//#include "vtkExodusIIWriter.h"
+#include "vtkExodusIIWriter.h"
+#include <vtkIntArray.h>
+#include <vtkPoints.h>
+#include <vtkPointData.h>
+#include <vtkCellData.h>
+#include <vtkCellArray.h>
+#include <vtkHexahedron.h>
+#include <vtkUnstructuredGrid.h>
 
 //RegisterKeywords(
 //{ "intensity_levels", "the port occupancy level that should cause intensity transitions" },
@@ -391,15 +396,112 @@ namespace Statistics {
 //  exodusWriter->Write();
 //}
 
-//void
-//StatVTK::outputExodus(const std::string& fileroot,
-//    std::multimap<uint64_t, traffic_event>&& traffMap,
-//    const display_config& cfg,
-//    Topology *topo)
-//{
-//  outputExodusWithSharedMap(fileroot, std::move(traffMap),
-//                            cfg, topo);
-//}
+void
+StatVTK::outputExodus(const std::string& fileroot,
+    std::multimap<uint64_t, traffic_event>&& traffMap,
+    std::set<vtk_topology_cube, compare_topology>&& vtkTopologyCube)
+{
+
+  static constexpr int NUM_POINTS_PER_BOX = 8;
+
+  // Create the vtkPoints
+  vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+  points->SetNumberOfPoints(NUM_POINTS_PER_BOX * vtkTopologyCube.size());
+  std::cout << "Number of cube : "<<vtkTopologyCube.size() <<std::endl;
+
+  // Create the vtkCellArray
+  // 6 face cell array per switch
+  vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
+  std::map<std::string, int> compNameToCellIdMap;
+
+  int i = 0;
+  int cellId = 0;
+  for (const auto& cube : vtkTopologyCube) {
+    points->SetPoint(0 + i, cube.x_corner_, cube.y_corner_, 1);
+    points->SetPoint(1 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_, 1);
+    points->SetPoint(2 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_ + cube.y_size_, 1);
+    points->SetPoint(3 + i, cube.x_corner_, cube.y_corner_ + cube.y_size_, 1);
+    points->SetPoint(4 + i, cube.x_corner_, cube.y_corner_, 1 + cube.x_size_);
+    points->SetPoint(5 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_, 1 + cube.x_size_);
+    points->SetPoint(6 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_ + cube.y_size_, 1 + cube.x_size_);
+    points->SetPoint(7 + i, cube.x_corner_, cube.y_corner_ + cube.y_size_, 1 + cube.x_size_);
+    i += NUM_POINTS_PER_BOX;
+
+    compNameToCellIdMap.emplace( cube.compName_, cellId);
+    cellId += 1;
+  }
+
+  for (int i = 0, j=0; i < vtkTopologyCube.size(); ++i, j+=NUM_POINTS_PER_BOX) {
+    vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
+    cell->GetPointIds()->SetId(0, j + 0);
+    cell->GetPointIds()->SetId(1, j + 1);
+    cell->GetPointIds()->SetId(2, j + 2);
+    cell->GetPointIds()->SetId(3, j + 3);
+    cell->GetPointIds()->SetId(4, j + 4);
+    cell->GetPointIds()->SetId(5, j + 5);
+    cell->GetPointIds()->SetId(6, j + 6);
+    cell->GetPointIds()->SetId(7, j + 7);
+    cells->InsertNextCell(cell);
+  };
+
+  // Init traffic array with default 0 traffic value
+  vtkSmartPointer<vtkIntArray> traffic = vtkSmartPointer<vtkIntArray>::New();
+  traffic->SetNumberOfComponents(1);
+  traffic->SetName("MyTraffic");
+  traffic->SetNumberOfValues(cells->GetNumberOfCells());
+
+  for (int c = 0; c < cells->GetNumberOfCells(); ++c) {
+    traffic->SetValue(c,0);
+  }
+
+  vtkSmartPointer<vtkUnstructuredGrid> unstructured_grid =
+      vtkSmartPointer<vtkUnstructuredGrid>::New();
+
+  unstructured_grid->SetPoints(points);
+  unstructured_grid->SetCells(VTK_HEXAHEDRON, cells);
+  unstructured_grid->GetCellData()->AddArray(traffic);
+
+  // Init Time Step
+  double current_time = -1;
+  double *time_step_value = new double[traffMap.size() + 1];
+  time_step_value[0] = 0.;
+  int currend_index = 1;
+  for (auto it = traffMap.cbegin(); it != traffMap.cend(); ++it){
+    if (it->first != current_time){
+      current_time = it->first;
+      time_step_value[currend_index] = it->first;
+      ++currend_index;
+    }
+  }
+
+  //  // TOCHECK: time_step_value for trafficMap.size() > values >= currend_index isn't intialized (and shouldn't be used)
+  //  // time_step_value should be resized ?
+
+  vtkSmartPointer<vtkTrafficSource> trafficSource = vtkSmartPointer<vtkTrafficSource>::New();
+  trafficSource->SetCompNameToCellIdMap(std::move(compNameToCellIdMap));
+  trafficSource->SetTrafficProgressMap(std::move(traffMap));
+  trafficSource->SetTraffics(traffic);
+  trafficSource->SetPoints(points);
+  trafficSource->SetCells(cells);
+  trafficSource->SetSteps(time_step_value);
+  trafficSource->SetNumberOfSteps(currend_index);
+  //  trafficSource->SetDisplayParameters(display_cfg);
+  //  trafficSource->SetNumObjects(num_switches, num_links_to_paint, std::move(cell_offsets));
+  //  trafficSource->SetGeometries(std::move(geoms));
+  //  trafficSource->SetCellTypes(std::move(cell_types));
+  //  trafficSource->SetPortLinkMap(std::move(port_to_vtk_cell_mapping));
+  //  trafficSource->SetLocalToGlobalLinkMap(std::move(outport_to_link));
+
+  vtkSmartPointer<vtkExodusIIWriter> exodusWriter = vtkSmartPointer<vtkExodusIIWriter>::New();
+  std::string fileName = fileroot;
+  if(fileroot.find(".e") ==  std::string::npos){
+     fileName = fileroot + ".e";
+  }
+  exodusWriter->SetFileName(fileName.c_str());
+  exodusWriter->SetInputConnection (trafficSource->GetOutputPort());
+  exodusWriter->WriteAllTimeStepsOn ();
+  exodusWriter->Write();
+}
 
 
 StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
@@ -409,6 +511,20 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
   std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId <<std::endl;
   this->setStatisticTypeName("StatVTK");
   lastTime_ = 0;
+
+  for (const std::string& it : statParams.getKeys()) {
+      std::cout << "StatVTK: KEY"<< it <<std::endl;
+  }
+  int x_size = statParams.find<int>("x_size", 0);
+  int y_size = statParams.find<int>("y_size", 0);
+  int x_corner = statParams.find<int>("x_corner", 0);
+  int y_corner = statParams.find<int>("y_corner", 0);
+  std::cout << "x_size"<< x_size <<std::endl;
+  std::cout << "y_size"<< y_size <<std::endl;
+  std::cout << "x_corner"<< x_corner <<std::endl;
+  std::cout << "y_corner"<< y_corner <<std::endl;
+  vtk_topology_cube_ = vtk_topology_cube(this->getCompName(), x_size, y_size, x_corner, y_corner);
+
 
 //  min_interval_ = sstmac::TimeDelta(params.find<SST::UnitAlgebra>("min_interval", "1us").getValue().toDouble());
 //  display_cfg_.bidirectional_shift = params.find<double>("bidirectional_shift", 0.02);
@@ -450,13 +566,6 @@ StatVTK::registerOutput(StatisticOutput * /*statOutput*/)
 
 }
 
-void StatVTK::outputStatistic(StatisticOutput* statOutput, bool UNUSED(EndOfSimFlag))
-{
-    //  outputExodusWithSharedMap(fileroot_, std::move(traffic_event_map_),
-    //                            display_cfg_, Topology::global());
-}
-
-
 void
 StatVTK::registerOutputFields(StatisticFieldsOutput * /*statOutput*/)
 {
@@ -490,6 +599,10 @@ const std::multimap<uint64_t, traffic_event>& StatVTK::getEvents() const {
   return traffic_event_map_;
 }
 
+vtk_topology_cube StatVTK::getTopology() const {
+  return vtk_topology_cube_;
+}
+
 
 
 //void
@@ -514,25 +627,6 @@ const std::multimap<uint64_t, traffic_event>& StatVTK::getEvents() const {
 //    }
 //  }
 
-//}
-
-//void
-//StatVTK::configure(SwitchId sid, Topology *top)
-//{
-//  top_ = top;
-//  auto geom = top_->getVtkGeometry(sid);
-//  id_ = sid;
-//  port_states_.resize(geom.ports.size());
-
-//  if (!filters_.empty()){
-//    active_ = false;
-//    for (auto& pair : filters_){
-//      if (pair.first <= id_ && id_ <= pair.second){
-//        active_ = true;
-//        break;
-//      }
-//    }
-//  }
 //}
 
 //void

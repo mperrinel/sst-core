@@ -43,6 +43,8 @@ public:
 
     void output(StatisticBase* statistic, bool endOfSimFlag) override;
 
+    void outputExodus(const std::string& fileroot);
+
 protected:
     /** Perform a check of provided parameters
      * @return True if all required parameters and options are acceptable
@@ -81,6 +83,7 @@ private:
 private:
     std::string              m_FilePath;
     std::multimap<uint64_t, traffic_event> m_traffic_progress_map;
+    std::set<vtk_topology_cube, compare_topology> m_vtk_topology_cube_list_;
 
 };
 
