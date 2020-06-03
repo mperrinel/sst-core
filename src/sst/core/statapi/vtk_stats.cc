@@ -57,7 +57,6 @@ Questions? Contact sst-macro-help@sandia.gov
 //#include <vtkPolyVertex.h>
 //#include <vtkVertex.h>
 //#include <vtkQuad.h>
-//#include <vtkLine.h>
 //#include <vtkLagrangeCurve.h>
 //#include <vtkCubicLine.h>
 //#include <vtkCellArray.h>
@@ -75,6 +74,7 @@ Questions? Contact sst-macro-help@sandia.gov
 //#include "vtkStdString.h"
 #include "vtkExodusIIWriter.h"
 #include <vtkIntArray.h>
+#include <vtkLine.h>
 #include <vtkPoints.h>
 #include <vtkPointData.h>
 #include <vtkCellData.h>
@@ -399,20 +399,27 @@ namespace Statistics {
 void
 StatVTK::outputExodus(const std::string& fileroot,
     std::multimap<uint64_t, traffic_event>&& traffMap,
-    std::set<vtk_topology_cube, compare_topology>&& vtkTopologyCube)
+    std::set<vtk_topology_cube, compare_topology>&& vtkTopologyCube,
+    std::set<vtk_link, compare_link>&& vtkLink)
 {
 
   static constexpr int NUM_POINTS_PER_BOX = 8;
+  static constexpr int NUM_POINTS_PER_LINK = 2;
 
   // Create the vtkPoints
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-  points->SetNumberOfPoints(NUM_POINTS_PER_BOX * vtkTopologyCube.size());
+  points->SetNumberOfPoints(NUM_POINTS_PER_BOX * vtkTopologyCube.size() +
+                            NUM_POINTS_PER_LINK * vtkLink.size());
   std::cout << "Number of cube : "<<vtkTopologyCube.size() <<std::endl;
+  std::cout << "Number of Link : "<<vtkLink.size() <<std::endl;
 
   // Create the vtkCellArray
   // 6 face cell array per switch
   vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
   std::map<std::string, int> compNameToCellIdMap;
+
+  std::vector<int> cell_types;
+  cell_types.reserve(vtkTopologyCube.size() + vtkLink.size());
 
   int i = 0;
   int cellId = 0;
@@ -442,7 +449,26 @@ StatVTK::outputExodus(const std::string& fileroot,
     cell->GetPointIds()->SetId(6, j + 6);
     cell->GetPointIds()->SetId(7, j + 7);
     cells->InsertNextCell(cell);
+    cell_types.push_back(VTK_HEXAHEDRON);
   };
+
+  // LINK.
+  int pointsCount = vtkTopologyCube.size() * NUM_POINTS_PER_BOX;
+  i = 0;
+  for (const auto& link : vtkLink) {
+    vtk_topology_cube cube1 = *vtkTopologyCube.find(vtk_topology_cube(link.compName1_));
+    vtk_topology_cube cube2 = *vtkTopologyCube.find(vtk_topology_cube(link.compName2_));
+    points->SetPoint(pointsCount + i, cube1.x_corner_ + (double) (cube1.x_size_ ) /2.0, cube1.y_corner_ + + (double) (cube1.y_size_) /2.0, 1 + (double ) ( cube1.x_size_ ) / 2.0);
+    points->SetPoint(pointsCount + i + 1, cube2.x_corner_ + (double) (cube2.x_size_ ) /2.0, cube2.y_corner_ + + (double) (cube2.y_size_) /2.0, 1 + (double ) ( cube2.x_size_ ) / 2.0);
+
+    vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+    line->GetPointIds()->SetId(0, pointsCount + i);
+    line->GetPointIds()->SetId(1, pointsCount + i + 1);
+    cells->InsertNextCell(line);
+    cell_types.push_back(VTK_LINE);
+
+    i += NUM_POINTS_PER_LINK;
+  }
 
   // Init traffic array with default 0 traffic value
   vtkSmartPointer<vtkIntArray> traffic = vtkSmartPointer<vtkIntArray>::New();
@@ -458,7 +484,7 @@ StatVTK::outputExodus(const std::string& fileroot,
       vtkSmartPointer<vtkUnstructuredGrid>::New();
 
   unstructured_grid->SetPoints(points);
-  unstructured_grid->SetCells(VTK_HEXAHEDRON, cells);
+  unstructured_grid->SetCells(cell_types.data(), cells);
   unstructured_grid->GetCellData()->AddArray(traffic);
 
   // Init Time Step
@@ -485,10 +511,10 @@ StatVTK::outputExodus(const std::string& fileroot,
   trafficSource->SetCells(cells);
   trafficSource->SetSteps(time_step_value);
   trafficSource->SetNumberOfSteps(currend_index);
+  trafficSource->SetCellTypes(std::move(cell_types));
   //  trafficSource->SetDisplayParameters(display_cfg);
   //  trafficSource->SetNumObjects(num_switches, num_links_to_paint, std::move(cell_offsets));
   //  trafficSource->SetGeometries(std::move(geoms));
-  //  trafficSource->SetCellTypes(std::move(cell_types));
   //  trafficSource->SetPortLinkMap(std::move(port_to_vtk_cell_mapping));
   //  trafficSource->SetLocalToGlobalLinkMap(std::move(outport_to_link));
 
@@ -508,22 +534,29 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
   MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), active_(true)
 {
-  std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId <<std::endl;
+  std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
   this->setStatisticTypeName("StatVTK");
   lastTime_ = 0;
 
   for (const std::string& it : statParams.getKeys()) {
-      std::cout << "StatVTK: KEY"<< it <<std::endl;
+      std::cout << "StatVTK: KEY "<< it <<std::endl;
   }
   int x_size = statParams.find<int>("x_size", 0);
   int y_size = statParams.find<int>("y_size", 0);
   int x_corner = statParams.find<int>("x_corner", 0);
   int y_corner = statParams.find<int>("y_corner", 0);
+  std::string link_c1 = statParams.find<std::string>("link_c1", "");
+  std::string link_c2 = statParams.find<std::string>("link_c2", "");
+  std::string link_shape = statParams.find<std::string>("link_shape", "");
   std::cout << "x_size"<< x_size <<std::endl;
   std::cout << "y_size"<< y_size <<std::endl;
   std::cout << "x_corner"<< x_corner <<std::endl;
   std::cout << "y_corner"<< y_corner <<std::endl;
   vtk_topology_cube_ = vtk_topology_cube(this->getCompName(), x_size, y_size, x_corner, y_corner);
+  std::cout << "link_c1:"<< link_c1 <<std::endl;
+  std::cout << "link_c2:"<< link_c2 <<std::endl;
+  std::cout << "link_shape:"<< link_shape <<std::endl;
+  vtk_link_ = vtk_link(link_c1, link_c2, link_shape);
 
 
 //  min_interval_ = sstmac::TimeDelta(params.find<SST::UnitAlgebra>("min_interval", "1us").getValue().toDouble());
@@ -603,7 +636,9 @@ vtk_topology_cube StatVTK::getTopology() const {
   return vtk_topology_cube_;
 }
 
-
+vtk_link StatVTK::getLink() const {
+  return vtk_link_;
+}
 
 //void
 //StatVTK::finalize(TimeDelta t)

@@ -222,7 +222,7 @@ int vtkTrafficSource::RequestData(
 
   // Send Topology to output
   output->SetPoints(this->Points);
-  output->SetCells(VTK_HEXAHEDRON, this->Cells);
+  output->SetCells(this->CellTypes.data(), this->Cells);
 
   return 1;
 }

@@ -113,7 +113,7 @@ public:
 
   template <class Vec> //allow move or copy
   void SetCellTypes(Vec&& types){
-//    CellTypes = std::forward<Vec>(types);
+    CellTypes = std::forward<Vec>(types);
   }
 
   template <class Map> //allow move or copy
@@ -161,7 +161,7 @@ protected:
   vtkSmartPointer<vtkPoints> Points;
   vtkSmartPointer<vtkCellArray> Cells;
 //  vtkSmartPointer<vtkCellArray> Lines;
-//  std::vector<int> CellTypes;
+  std::vector<int> CellTypes;
 //  std::vector<int> cell_offsets_;
 //  std::vector<Topology::VTKSwitchGeometry> geoms_;
   int num_switches_;

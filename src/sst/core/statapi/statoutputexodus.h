@@ -84,6 +84,7 @@ private:
     std::string              m_FilePath;
     std::multimap<uint64_t, traffic_event> m_traffic_progress_map;
     std::set<vtk_topology_cube, compare_topology> m_vtk_topology_cube_list_;
+    std::set<vtk_link, compare_link> m_vtk_link_list_;
 
 };
 

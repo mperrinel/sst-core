@@ -41,6 +41,7 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
     }
 
     m_vtk_topology_cube_list_.insert(vtkStat->getTopology());
+    m_vtk_link_list_.insert(vtkStat->getLink());
 
     this->unlock();
   }
@@ -115,12 +116,15 @@ void StatisticOutputEXODUS::endOfSimulation()
     const auto &map = nodeIte.second;
     std::cout<<NodeId<<"::: ";
     for(auto itMap = map.cbegin(); itMap != map.cend(); ++itMap){
-      std::cout <<  itMap->second << "  ";
+      std::cout << "t:"<< itMap->first<< " color: " <<  itMap->second << "  ";
     }
     std::cout<<std::endl;
   }
 
-  StatVTK::outputExodus(m_FilePath, std::move(m_traffic_progress_map), std::move(m_vtk_topology_cube_list_));
+  StatVTK::outputExodus(m_FilePath, std::move(m_traffic_progress_map),
+                        std::move(m_vtk_topology_cube_list_),
+                        std::move(m_vtk_link_list_)
+                        );
 
   // Close the file
   closeFile();
