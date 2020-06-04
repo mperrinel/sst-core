@@ -348,12 +348,14 @@ if HAVE_VTK
 AM_CPPFLAGS += $(VTK_CPPFLAGS)
 sst_core_sources +=  \
 	statapi/statoutputexodus.cc \
-	statapi/vtk_stats.cc
+	statapi/vtk_stats.cc \
+	statapi/vtkTrafficSource.cc
 
 nobase_dist_sst_HEADERS += \
 	statapi/statoutputexodus.h \
-	statapi/vtk_stats.h
-sstsim_x_LDADD += $(VTK_LDFLAGS)
-sstinfo_x_LDADD += $(VTK_LDFLAGS)
+	statapi/vtk_stats.h \
+	statapi/vtkTrafficSource.h
+sstsim_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
+sstinfo_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
 endif
 
