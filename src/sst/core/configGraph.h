@@ -124,6 +124,55 @@ private:
 
 };
 
+class ConfigStatistic : public SST::Core::Serialization::serializable {
+public:
+    StatisticId_t id;                /*!< Unique ID of this component */
+    ConfigGraph*  graph;            /*!< Graph that this component belongs to */
+    std::string name;
+    int slot_num;                    /*!< Slot number. */
+    std::string type;
+    Params params;
+    ComponentId_t component;
+    size_t outputID;
+    UnitAlgebra outputFrequency;
+
+    ConfigStatistic(StatisticId_t id, ConfigGraph*  graph, const std::string& name, int slot_num, const std::string& type) :
+      id(id),
+      graph(graph),
+      name(name),
+      slot_num(slot_num),
+      type(type),
+      outputID(0) { }
+    ConfigStatistic() {} /* Do not use */
+
+    inline const StatisticId_t& key()const { return id; }
+
+    bool setComponent(ComponentId_t id);
+    void addParameter(const std::string& key, const std::string& value, bool overwrite);
+    bool setOutput(size_t id);
+    bool setFrequency(const std::string& freq);
+
+     /**
+     * Checks to make sure that all components in the group support all
+     * of the statistics as configured in the group.
+     * @return pair of:  bool for OK, string for error message (if any)
+     */
+    std::pair<bool, std::string> verifyStatsAndComponents(const ConfigGraph* graph);
+
+
+
+    void serialize_order(SST::Core::Serialization::serializer &ser) override {
+        ser & name;
+        ser & slot_num;
+        ser & params;
+        ser & component;
+        ser & outputID;
+        ser & outputFrequency;
+    }
+
+    ImplementSerializable(SST::ConfigStatistic)
+
+};
 
 
 class ConfigStatGroup : public SST::Core::Serialization::serializable {
@@ -204,8 +253,10 @@ public:
     uint8_t                       statLoadLevel;     /*!< Statistic load level for this component */
     std::vector<Statistics::StatisticInfo> enabledStatistics; /*!< List of statistics to be enabled */
     std::vector<ConfigComponent>  subComponents; /*!< List of subcomponents */
+    std::vector<ConfigStatistic>  statistics; /*!< List of subcomponents */
     std::vector<double>           coords;
     uint16_t                      nextSubID;         /*!< Next subID to use for children */
+    uint16_t                      nextStatID;         /*!< Next subID to use for children */
 
     static constexpr ComponentId_t null_id = std::numeric_limits<ComponentId_t>::max();
 
@@ -218,9 +269,10 @@ public:
     ConfigComponent cloneWithoutLinksOrParams() const;
 
     ~ConfigComponent() {}
-    ConfigComponent() : id(null_id), statLoadLevel(STATISTICLOADLEVELUNINITIALIZED), nextSubID(1) { }
+    ConfigComponent() : id(null_id), statLoadLevel(STATISTICLOADLEVELUNINITIALIZED), nextSubID(1), nextStatID(1) { }
 
     ComponentId_t getNextSubComponentID();
+    StatisticId_t getNextStatisticID();
 
     void setRank(RankInfo r);
     void setWeight(double w);
@@ -230,6 +282,10 @@ public:
     ConfigComponent* findSubComponent(ComponentId_t);
     const ConfigComponent* findSubComponent(ComponentId_t) const;
     ConfigComponent* findSubComponentByName(const std::string& name);
+    ConfigStatistic* addStatistic(StatisticId_t, const std::string& name, const std::string& type, int slot);
+    ConfigStatistic* findStatistic(StatisticId_t);
+    const ConfigStatistic* findStatistic(StatisticId_t) const;
+    ConfigStatistic* findStatisticByName(const std::string& name);
     void enableStatistic(const std::string& statisticName, bool recursively = false);
     void addStatisticParameter(const std::string& statisticName, const std::string& param, const std::string& value, bool recursively = false);
     void setStatisticParameters(const std::string& statisticName, const Params &params, bool recursively = false);
@@ -266,7 +322,8 @@ private:
         weight(weight),
         rank(rank),
         statLoadLevel(STATISTICLOADLEVELUNINITIALIZED),
-        nextSubID(1)
+        nextSubID(1),
+        nextStatID(1)
     {
         coords.resize(3, 0.0);
     }
@@ -280,7 +337,8 @@ private:
         weight(weight),
         rank(rank),
         statLoadLevel(STATISTICLOADLEVELUNINITIALIZED),
-        nextSubID(1)
+        nextSubID(1),
+        nextStatID(1)
     {
         coords.resize(3, 0.0);
     }
@@ -295,6 +353,8 @@ private:
 // typedef SparseVectorMap<std::string,ConfigLink> ConfigLinkMap_t;
 /** Map IDs to Components */
 typedef SparseVectorMap<ComponentId_t,ConfigComponent> ConfigComponentMap_t;
+/** Map IDs to Statitics */
+typedef SparseVectorMap<StatisticId_t,ConfigStatistic> ConfigStatisticMap_t;
 /** Map names to Components */
 // typedef std::map<std::string,ConfigComponent*> ConfigComponentNameMap_t;
 /** Map names to Parameter Sets: XML only */
@@ -305,7 +365,7 @@ typedef std::map<std::string,std::string> VariableMap_t;
 class PartitionGraph;
 
 /** A Configuration Graph
- *  A graph representing Components and Links
+ *  A graph representing Components, Statistics and Links
  */
 class ConfigGraph : public SST::Core::Serialization::serializable {
 public:
@@ -341,6 +401,9 @@ public:
     /** Create a new component */
     ComponentId_t addComponent(ComponentId_t id, const std::string& name, const std::string& type);
 
+
+    /** Create a new statistic */
+    StatisticId_t addStatistic(StatisticId_t id, const std::string& param, const std::string& value, int slot_num);
 
     /** Set the statistic output module */
     void setStatisticOutput(const std::string& name);
@@ -400,6 +463,16 @@ public:
     const ConfigComponent* findComponent(ComponentId_t) const;
 
     /** Return the map of links */
+    ConfigStatisticMap_t& getStatMap() {
+        return stats;
+    }
+
+    bool containsStatistic(StatisticId_t id) const;
+    ConfigStatistic* findStatistic(StatisticId_t);
+    const ConfigStatistic* findStatistic(StatisticId_t) const;
+
+
+    /** Return the map of links */
     ConfigLinkMap_t& getLinkMap() {
         return links;
     }
@@ -427,6 +500,7 @@ private:
 
     ConfigLinkMap_t      links;
     ConfigComponentMap_t comps;
+    ConfigStatisticMap_t stats;
     // ConfigComponentNameMap_t compsByName;
     std::map<std::string, ConfigStatGroup> statGroups;
 

@@ -36,6 +36,55 @@ void ConfigLink::updateLatencies(TimeLord *timeLord)
     latency[1] = timeLord->getSimCycles(latency_str[1], __FUNCTION__);
 }
 
+bool ConfigStatistic::setComponent(ComponentId_t id)
+{
+    component = id;
+
+    return true;
+}
+
+
+void ConfigStatistic::addParameter(const std::string& key, const std::string& value, bool overwrite)
+{
+    bool bk = params.enableVerify(false);
+    params.insert(key, value, overwrite);
+    params.enableVerify(bk);
+}
+
+
+bool ConfigStatistic::setOutput(size_t id)
+{
+    outputID = id;
+    return true;
+}
+
+
+bool ConfigStatistic::setFrequency(const std::string& freq)
+{
+    UnitAlgebra uaFreq(freq);
+    if ( uaFreq.hasUnits("s") || uaFreq.hasUnits("hz") ) {
+        outputFrequency = uaFreq;
+        return true;
+    }
+    return false;
+}
+
+
+std::pair<bool, std::string> ConfigStatistic::verifyStatsAndComponents(const ConfigGraph *graph)
+{
+  const ConfigComponent* configComp = graph->findComponent(component);
+  bool ok = Factory::getFactory()->DoesComponentInfoStatisticNameExist(configComp->type, name);
+
+  if ( !ok ) {
+      std::stringstream ss;
+      ss << "Component " << configComp->name << " does not support statistic " << name;
+      return std::make_pair(false, ss.str());
+  }
+
+  return std::make_pair(true, "");
+}
+
+
 
 bool ConfigStatGroup::addComponent(ComponentId_t id)
 {
@@ -124,6 +173,11 @@ void ConfigComponent::print(std::ostream &os) const {
     for ( auto & sc : subComponents ) {
         sc.print(os);
     }
+
+//    os << "  Statistics:\n";
+//    for ( auto & stat : statistics ) {
+//        stat.print(os);
+//    }
 }
 
 ConfigComponent
@@ -143,6 +197,9 @@ ConfigComponent::cloneWithoutLinks() const
     for ( auto &i : subComponents ) {
         ret.subComponents.emplace_back(i.cloneWithoutLinks());
     }
+//    for ( auto &i : statistics ) {
+//        ret.statistics.emplace_back(i.cloneWithoutLinks());
+//    }
     return ret;
 }
 
@@ -163,6 +220,9 @@ ConfigComponent::cloneWithoutLinksOrParams() const
     for ( auto &i : subComponents ) {
         ret.subComponents.emplace_back(i.cloneWithoutLinksOrParams());
     }
+//    for ( auto &i : statistics ) {
+//        ret.statistics.emplace_back(i.cloneWithoutLinksOrParams());
+//    }
     return ret;
 }
 
@@ -183,7 +243,22 @@ ComponentId_t ConfigComponent::getNextSubComponentID()
         
 }
 
+StatisticId_t ConfigComponent::getNextStatisticID()
+{
+  // If we are the ultimate component, get nextSubID and increment
+  // for next time
+  if ( id == COMPONENT_ID_MASK(id) ) {
+      uint16_t statId = nextStatID;
+      nextStatID++;
+      return STATISTIC_ID_CREATE( id, statId );
+  }
+  else {
+      // Get the ultimate parent and call getNextSubComponentID on
+      // it
+      return graph->findComponent(COMPONENT_ID_MASK(id))->getNextStatisticID();
+  }
 
+}
 
 void ConfigComponent::setRank(RankInfo r)
 {
@@ -381,6 +456,70 @@ ConfigComponent* ConfigComponent::findSubComponentByName(const std::string& name
     return nullptr;
 }
 
+ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::string& name, const std::string& type, int slot_num)
+{
+    /* Check for existing statistic with this name */
+    for ( auto &i : statistics ) {
+        if ( i.name == name && i.slot_num == slot_num )
+            return nullptr;
+    }
+
+    statistics.emplace_back(
+        ConfigStatistic(sid, graph, name, slot_num, type));
+
+    return &(statistics.back());
+}
+
+ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid)
+{
+    return const_cast<ConfigStatistic*>(const_cast<const ConfigComponent*>(this)->findStatistic(sid));
+}
+
+const ConfigStatistic* ConfigComponent::findStatistic(ComponentId_t sid) const
+{
+  for ( const auto &s : statistics ) {
+    if ( s.id == sid ) {
+      const ConfigStatistic* res = const_cast<ConfigStatistic*>(&s);
+      if ( res != nullptr ) {
+          return res;
+      }
+    }
+  }
+  return nullptr;
+}
+
+ConfigStatistic* ConfigComponent::findStatisticByName(const std::string& name)
+{
+    size_t colon_index = name.find(":");
+    std::string slot = name.substr(0,colon_index);
+
+    // Get the slot number
+    int slot_num = 0;
+    size_t bracket_index = slot.find("[");
+    if ( bracket_index == std::string::npos ) {
+        // No brackets, slot_num 0
+        slot_num = 0;
+    }
+    else {
+        size_t close_index = slot.find("]");
+        size_t length = close_index - bracket_index - 1;
+        slot_num = Core::from_string<int>(slot.substr(bracket_index+1,length));
+        slot = slot.substr(0,bracket_index);
+    }
+
+    // Now, see if we have something in this slot and slot_num
+    for ( auto& sc : statistics ) {
+        if ( sc.name == slot && sc.slot_num == slot_num ) {
+            // Found the subcomponent
+            if ( colon_index == std::string::npos ) {
+                // Last level of hierarchy
+                return &sc;
+            }
+        }
+    }
+    return nullptr;
+}
+
 std::vector<LinkId_t> ConfigComponent::allLinks() const {
     std::vector<LinkId_t> res;
     res.insert(res.end(), links.begin(), links.end());
@@ -553,6 +692,12 @@ ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::
     return id;
 }
 
+StatisticId_t
+ConfigGraph::addStatistic(StatisticId_t id, const std::string& name, const std::string& type, int slot_num)
+{
+    stats.push_back(ConfigStatistic(id, this, name, slot_num, type));
+    return id;
+}
 
 
 void
@@ -741,6 +886,25 @@ const ConfigComponent* ConfigGraph::findComponent(ComponentId_t id) const
     }
 
     return comps[COMPONENT_ID_MASK(id)].findSubComponent(id);
+}
+
+bool ConfigGraph::containsStatistic(StatisticId_t id) const {
+    return stats.contains(id);
+}
+
+ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id)
+{
+    return const_cast<ConfigStatistic*>(const_cast<const ConfigGraph*>(this)->findStatistic(id));
+}
+
+const ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
+{
+    /* Check to make sure we're part of the same statistic */
+    if ( STATISTIC_ID_MASK(id) == id ) {
+        return &stats[id];
+    }
+
+    return nullptr;
 }
 
 

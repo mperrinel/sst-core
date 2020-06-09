@@ -66,9 +66,11 @@ int ComponentHolder::compare(ComponentHolder *other) {
     else return 0;    
 }
 
-
-
 int PySubComponent::getSlot() {
+    return getComp()->slot_num;
+}
+
+int PyStatistic::getSlot() {
     return getComp()->slot_num;
 }
 
@@ -247,6 +249,33 @@ static PyObject* compSetSubComponent(PyObject *self, PyObject *args)
     return nullptr;
 }
 
+static PyObject* compSetStatistic(PyObject *self, PyObject *args)
+{
+    char *name = nullptr, *type = nullptr;
+    int slot = 0;
+
+
+    if ( !PyArg_ParseTuple(args, "ss|i", &name, &type, &slot) )
+        return nullptr;
+
+    ConfigComponent *c = getComp(self);
+    if ( nullptr == c ) return nullptr;
+
+    StatisticId_t stat_id = c->getNextStatisticID();
+    ConfigStatistic* sub = c->addStatistic(stat_id, name, type, slot);
+    if ( nullptr != sub ) {
+        PyObject *argList = Py_BuildValue("Ok", self, stat_id);
+        PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatisticType, argList);
+        Py_DECREF(argList);
+        return subObj;
+    }
+
+    char errMsg[1024] = {0};
+    snprintf(errMsg, sizeof(errMsg)-1, "Failed to create statistic %s on %s.  Already attached a statistic at that slot name and number?\n", name, c->name.c_str());
+    PyErr_SetString(PyExc_RuntimeError, errMsg);
+    return nullptr;
+}
+
 static PyObject* compSetCoords(PyObject *self, PyObject *args)
 {
     std::vector<double> coords(3, 0.0);
@@ -415,6 +444,9 @@ static PyMethodDef componentMethods[] = {
         compEnableStatistics, METH_VARARGS,
         "Enables Multiple Statistics in the component with optional parameters"},
     {   "setSubComponent",
+        compSetStatistic, METH_VARARGS,
+        "Bind a statistic to slot <name>, with type <type>"},
+    {   "setStatistic",
         compSetSubComponent, METH_VARARGS,
         "Bind a subcomponent to slot <name>, with type <type>"},
     {   "setCoordinates",
@@ -474,10 +506,6 @@ PyTypeObject PyModel_ComponentType = {
     0,                         /* tp_version_tag */
 };
 
-
-
-
-
 static int subCompInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
     ComponentId_t id;
@@ -505,6 +533,22 @@ static void subCompDealloc(ComponentPy_t *self)
 }
 
 
+static int statInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
+{
+    ComponentId_t id;
+    PyObject *parent;
+    // if ( !PyArg_ParseTuple(args, "Ossii", &parent, &name, &type, &slot, &id) )
+    if ( !PyArg_ParseTuple(args, "Ok", &parent, &id) )
+        return -1;
+
+    PyStatistic *obj = new PyStatistic(self,id);
+
+    self->obj = obj;
+
+    gModel->getOutput()->verbose(CALL_INFO, 3, 0, "Creating statistic [%s] of type [%s]]\n", getComp((PyObject*)self)->name.c_str(), getComp((PyObject*)self)->type.c_str());
+
+    return 0;
+}
 
 static PyMethodDef subComponentMethods[] = {
     {   "addParam",
@@ -572,6 +616,65 @@ PyTypeObject PyModel_SubComponentType = {
     nullptr,                         /* tp_descr_set */
     0,                         /* tp_dictoffset */
     (initproc)subCompInit,     /* tp_init */
+    nullptr,                         /* tp_alloc */
+    nullptr,                         /* tp_new */
+    nullptr,                         /* tp_free */
+    nullptr,                         /* tp_is_gc */
+    nullptr,                         /* tp_bases */
+    nullptr,                         /* tp_mro */
+    nullptr,                         /* tp_cache */
+    nullptr,                         /* tp_subclasses */
+    nullptr,                         /* tp_weaklist */
+    nullptr,                         /* tp_del */
+    0,                         /* tp_version_tag */
+};
+
+static PyMethodDef statisticMethods[] = {
+    {   "addParam",
+        compAddParam, METH_VARARGS,
+        "Adds a parameter(name, value)"},
+    {   "addParams",
+        compAddParams, METH_O,
+        "Adds Multiple Parameters from a dict"}
+   };
+
+PyTypeObject PyModel_StatisticType = {
+    PyVarObject_HEAD_INIT(nullptr, 0)
+    "sst.Statistic",        /* tp_name */
+    sizeof(ComponentPy_t),     /* tp_basicsize */
+    0,                         /* tp_itemsize */
+    (destructor)subCompDealloc,/* tp_dealloc */
+    nullptr,                         /* tp_print */
+    nullptr,                         /* tp_getattr */
+    nullptr,                         /* tp_setattr */
+    compCompare,               /* tp_compare */
+    nullptr,                         /* tp_repr */
+    nullptr,                         /* tp_as_number */
+    nullptr,                         /* tp_as_sequence */
+    nullptr,                         /* tp_as_mapping */
+    nullptr,                         /* tp_hash */
+    nullptr,                         /* tp_call */
+    nullptr,                         /* tp_str */
+    nullptr,                         /* tp_getattro */
+    nullptr,                         /* tp_setattro */
+    nullptr,                         /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,        /* tp_flags */
+    "SST Statistic",        /* tp_doc */
+    nullptr,                         /* tp_traverse */
+    nullptr,                         /* tp_clear */
+    nullptr,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    nullptr,                         /* tp_iter */
+    nullptr,                         /* tp_iternext */
+    statisticMethods,         /* tp_methods */
+    nullptr,                         /* tp_members */
+    nullptr,                         /* tp_getset */
+    nullptr,                         /* tp_base */
+    nullptr,                         /* tp_dict */
+    nullptr,                         /* tp_descr_get */
+    nullptr,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)statInit,     /* tp_init */
     nullptr,                         /* tp_alloc */
     nullptr,                         /* tp_new */
     nullptr,                         /* tp_free */

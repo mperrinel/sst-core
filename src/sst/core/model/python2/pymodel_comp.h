@@ -34,6 +34,7 @@ struct ComponentHolder {
     virtual std::string getName();
     ComponentId_t getID();
     ConfigComponent* getSubComp(const std::string& name, int slot_num);
+    ConfigStatistic* getStatistic(const std::string& name, int slot_num);
 };
 
 struct PyComponent : ComponentHolder {
@@ -49,6 +50,11 @@ struct PySubComponent : ComponentHolder {
     int getSlot();
 };
 
+struct PyStatistic : ComponentHolder {
+    PyStatistic(ComponentPy_t *pobj, ComponentId_t id) : ComponentHolder(pobj,id) { }
+    ~PyStatistic() {}
+    int getSlot();
+};
 
 struct ComponentPy_t {
     PyObject_HEAD
@@ -57,6 +63,7 @@ struct ComponentPy_t {
 
 extern PyTypeObject PyModel_ComponentType;
 extern PyTypeObject PyModel_SubComponentType;
+extern PyTypeObject PyModel_StatisticType;
 
 static inline ConfigComponent* getComp(PyObject *pobj) {
     ConfigComponent *c = ((ComponentPy_t*)pobj)->obj->getComp();
