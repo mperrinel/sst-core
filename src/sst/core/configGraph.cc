@@ -499,9 +499,7 @@ ConfigGraph::postCreationCleanup()
     for ( ConfigLink &link : getLinkMap() ) {
         link.updateLatencies(timeLord);
     }
-
 }
-
 
 bool
 ConfigGraph::checkForStructuralErrors()
@@ -603,7 +601,6 @@ ConfigGraph::checkForStructuralErrors()
     return found_error;
 }
 
-
 ComponentId_t
 ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::string& type, float weight, RankInfo rank)
 {
@@ -624,7 +621,6 @@ ConfigGraph::addStatistic(StatisticId_t id, const std::string& name)
     stats.push_back(ConfigStatistic(id, name));
     return id;
 }
-
 
 void
 ConfigGraph::setStatisticOutput(const std::string& name)
@@ -650,8 +646,6 @@ ConfigGraph::setStatisticLoadLevel(uint8_t loadLevel)
     statLoadLevel = loadLevel;
 }
 
-
-
 void
 ConfigGraph::enableStatisticForComponentName(const std::string& ComponentName, const std::string& statisticName, bool recursively)
 {
@@ -666,10 +660,6 @@ ConfigGraph::enableStatisticForComponentName(const std::string& ComponentName, c
         }
     }
 }
-
-
-
-
 
 template <class PredicateFunc, class UnaryFunc>
 size_t for_each_subcomp_if(ConfigComponent &c, PredicateFunc p, UnaryFunc f) {

@@ -53,7 +53,6 @@ struct PySubComponent : ComponentHolder {
 struct PyStatistic : ComponentHolder {
     PyStatistic(ComponentPy_t *pobj, ComponentId_t id) : ComponentHolder(pobj,id) { }
     ~PyStatistic() {}
-    int getSlot();
 };
 
 struct ComponentPy_t {

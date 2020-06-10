@@ -70,11 +70,6 @@ int PySubComponent::getSlot() {
     return getComp()->slot_num;
 }
 
-int PyStatistic::getSlot() {
-    return getComp()->slot_num;
-}
-
-
 static int compInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
     char *name, *type;
