@@ -22,6 +22,7 @@ REENABLE_WARNING
 
 #include "sst/core/model/python2/pymodel.h"
 #include "sst/core/model/python2/pymodel_comp.h"
+#include "sst/core/model/python2/pymodel_stat.h"
 #include "sst/core/model/python2/pymodel_link.h"
 
 #include "sst/core/sst_types.h"
@@ -269,7 +270,7 @@ static PyObject* compSetStatistic(PyObject *self, PyObject *args)
     ConfigStatistic* sub = c->addStatistic(stat_id, name);
     if ( nullptr != sub ) {
         PyObject *argList = Py_BuildValue("Ok", self, stat_id);
-        PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatisticType, argList);
+        PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatType, argList);
         Py_DECREF(argList);
         return subObj;
     }
@@ -527,31 +528,12 @@ static int subCompInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwd
     return 0;
 }
 
-
 static void subCompDealloc(ComponentPy_t *self)
 {
     if ( self->obj ) {
         delete self->obj;
     }
     self->ob_type->tp_free((PyObject*)self);
-}
-
-
-static int statInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
-{
-    ComponentId_t id;
-    PyObject *parent;
-    // if ( !PyArg_ParseTuple(args, "Ossii", &parent, &name, &type, &slot, &id) )
-    if ( !PyArg_ParseTuple(args, "Ok", &parent, &id) )
-        return -1;
-
-    PyStatistic *obj = new PyStatistic(self,id);
-
-    self->obj = obj;
-
-    gModel->getOutput()->verbose(CALL_INFO, 3, 0, "Creating statistic [%s] of type [%s]]\n", getComp((PyObject*)self)->name.c_str(), getComp((PyObject*)self)->type.c_str());
-
-    return 0;
 }
 
 static PyMethodDef subComponentMethods[] = {
@@ -632,66 +614,6 @@ PyTypeObject PyModel_SubComponentType = {
     nullptr,                         /* tp_del */
     0,                         /* tp_version_tag */
 };
-
-static PyMethodDef statisticMethods[] = {
-    {   "addParam",
-        compAddParam, METH_VARARGS,
-        "Adds a parameter(name, value)"},
-    {   "addParams",
-        compAddParams, METH_O,
-        "Adds Multiple Parameters from a dict"}
-   };
-
-PyTypeObject PyModel_StatisticType = {
-    PyVarObject_HEAD_INIT(nullptr, 0)
-    "sst.Statistic",        /* tp_name */
-    sizeof(ComponentPy_t),     /* tp_basicsize */
-    0,                         /* tp_itemsize */
-    (destructor)subCompDealloc,/* tp_dealloc */
-    nullptr,                         /* tp_print */
-    nullptr,                         /* tp_getattr */
-    nullptr,                         /* tp_setattr */
-    compCompare,               /* tp_compare */
-    nullptr,                         /* tp_repr */
-    nullptr,                         /* tp_as_number */
-    nullptr,                         /* tp_as_sequence */
-    nullptr,                         /* tp_as_mapping */
-    nullptr,                         /* tp_hash */
-    nullptr,                         /* tp_call */
-    nullptr,                         /* tp_str */
-    nullptr,                         /* tp_getattro */
-    nullptr,                         /* tp_setattro */
-    nullptr,                         /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,        /* tp_flags */
-    "SST Statistic",        /* tp_doc */
-    nullptr,                         /* tp_traverse */
-    nullptr,                         /* tp_clear */
-    nullptr,                         /* tp_richcompare */
-    0,                         /* tp_weaklistoffset */
-    nullptr,                         /* tp_iter */
-    nullptr,                         /* tp_iternext */
-    statisticMethods,         /* tp_methods */
-    nullptr,                         /* tp_members */
-    nullptr,                         /* tp_getset */
-    nullptr,                         /* tp_base */
-    nullptr,                         /* tp_dict */
-    nullptr,                         /* tp_descr_get */
-    nullptr,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)statInit,     /* tp_init */
-    nullptr,                         /* tp_alloc */
-    nullptr,                         /* tp_new */
-    nullptr,                         /* tp_free */
-    nullptr,                         /* tp_is_gc */
-    nullptr,                         /* tp_bases */
-    nullptr,                         /* tp_mro */
-    nullptr,                         /* tp_cache */
-    nullptr,                         /* tp_subclasses */
-    nullptr,                         /* tp_weaklist */
-    nullptr,                         /* tp_del */
-    0,                         /* tp_version_tag */
-};
-
 
 }  /* extern C */
 

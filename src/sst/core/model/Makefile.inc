@@ -17,6 +17,8 @@ sst_core_python2_sources = \
 	model/python2/pymodel_link.cc \
 	model/python2/pymodel_comp.h \
 	model/python2/pymodel_comp.cc \
+	model/python2/pymodel_stat.h \
+	model/python2/pymodel_stat.cc \
 	model/python2/pymodel_statgroup.h \
 	model/python2/pymodel_statgroup.cc
 

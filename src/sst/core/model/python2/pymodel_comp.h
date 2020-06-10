@@ -50,11 +50,6 @@ struct PySubComponent : ComponentHolder {
     int getSlot();
 };
 
-struct PyStatistic : ComponentHolder {
-    PyStatistic(ComponentPy_t *pobj, ComponentId_t id) : ComponentHolder(pobj,id) { }
-    ~PyStatistic() {}
-};
-
 struct ComponentPy_t {
     PyObject_HEAD
     ComponentHolder *obj;
@@ -62,7 +57,6 @@ struct ComponentPy_t {
 
 extern PyTypeObject PyModel_ComponentType;
 extern PyTypeObject PyModel_SubComponentType;
-extern PyTypeObject PyModel_StatisticType;
 
 static inline ConfigComponent* getComp(PyObject *pobj) {
     ConfigComponent *c = ((ComponentPy_t*)pobj)->obj->getComp();
