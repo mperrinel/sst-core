@@ -46,6 +46,15 @@ ConfigComponent* ComponentHolder::getSubComp(const std::string& name, int slot_n
     return nullptr;
 }
 
+ConfigStatistic* ComponentHolder::getStatistic(const std::string& name)
+{
+    for ( auto &stat : getComp()->statistics ) {
+        if ( stat.name == name)
+            return &stat;
+    }
+    return nullptr;
+}
+
 ComponentId_t ComponentHolder::getID()
 {
     return id;

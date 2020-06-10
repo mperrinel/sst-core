@@ -34,7 +34,7 @@ struct ComponentHolder {
     virtual std::string getName();
     ComponentId_t getID();
     ConfigComponent* getSubComp(const std::string& name, int slot_num);
-    ConfigStatistic* getStatistic(const std::string& name, int slot_num);
+    ConfigStatistic* getStatistic(const std::string& name);
 };
 
 struct PyComponent : ComponentHolder {
