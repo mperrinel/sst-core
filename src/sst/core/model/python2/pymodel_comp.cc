@@ -262,7 +262,7 @@ static PyObject* compSetStatistic(PyObject *self, PyObject *args)
     if ( nullptr == c ) return nullptr;
 
     StatisticId_t stat_id = c->getNextStatisticID();
-    ConfigStatistic* sub = c->addStatistic(stat_id, name, type, slot);
+    ConfigStatistic* sub = c->addStatistic(stat_id, name);
     if ( nullptr != sub ) {
         PyObject *argList = Py_BuildValue("Ok", self, stat_id);
         PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatisticType, argList);

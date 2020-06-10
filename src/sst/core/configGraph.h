@@ -127,47 +127,24 @@ private:
 class ConfigStatistic : public SST::Core::Serialization::serializable {
 public:
     StatisticId_t id;                /*!< Unique ID of this component */
-    ConfigGraph*  graph;            /*!< Graph that this component belongs to */
     std::string name;
-    int slot_num;                    /*!< Slot number. */
-    std::string type;
     Params params;
-    ComponentId_t component;
-    size_t outputID;
-    UnitAlgebra outputFrequency;
 
-    ConfigStatistic(StatisticId_t id, ConfigGraph*  graph, const std::string& name, int slot_num, const std::string& type) :
+    ConfigStatistic(StatisticId_t id, const std::string& name) :
       id(id),
-      graph(graph),
-      name(name),
-      slot_num(slot_num),
-      type(type),
-      outputID(0) { }
+      name(name)
+      { }
     ConfigStatistic() {} /* Do not use */
 
     inline const StatisticId_t& key()const { return id; }
 
     bool setComponent(ComponentId_t id);
     void addParameter(const std::string& key, const std::string& value, bool overwrite);
-    bool setOutput(size_t id);
-    bool setFrequency(const std::string& freq);
-
-     /**
-     * Checks to make sure that all components in the group support all
-     * of the statistics as configured in the group.
-     * @return pair of:  bool for OK, string for error message (if any)
-     */
-    std::pair<bool, std::string> verifyStatsAndComponents(const ConfigGraph* graph);
-
 
 
     void serialize_order(SST::Core::Serialization::serializer &ser) override {
         ser & name;
-        ser & slot_num;
         ser & params;
-        ser & component;
-        ser & outputID;
-        ser & outputFrequency;
     }
 
     ImplementSerializable(SST::ConfigStatistic)
@@ -282,10 +259,9 @@ public:
     ConfigComponent* findSubComponent(ComponentId_t);
     const ConfigComponent* findSubComponent(ComponentId_t) const;
     ConfigComponent* findSubComponentByName(const std::string& name);
-    ConfigStatistic* addStatistic(StatisticId_t, const std::string& name, const std::string& type, int slot);
+    ConfigStatistic* addStatistic(StatisticId_t, const std::string& name);
     ConfigStatistic* findStatistic(StatisticId_t);
     const ConfigStatistic* findStatistic(StatisticId_t) const;
-    ConfigStatistic* findStatisticByName(const std::string& name);
     void enableStatistic(const std::string& statisticName, bool recursively = false);
     void addStatisticParameter(const std::string& statisticName, const std::string& param, const std::string& value, bool recursively = false);
     void setStatisticParameters(const std::string& statisticName, const Params &params, bool recursively = false);
@@ -306,6 +282,7 @@ public:
         ser & statLoadLevel;
         ser & enabledStatistics;
         ser & subComponents;
+        ser & statistics;
     }
 
     ImplementSerializable(SST::ConfigComponent)
@@ -403,7 +380,7 @@ public:
 
 
     /** Create a new statistic */
-    StatisticId_t addStatistic(StatisticId_t id, const std::string& param, const std::string& value, int slot_num);
+    StatisticId_t addStatistic(StatisticId_t id, const std::string& name);
 
     /** Set the statistic output module */
     void setStatisticOutput(const std::string& name);

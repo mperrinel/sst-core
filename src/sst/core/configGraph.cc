@@ -36,54 +36,12 @@ void ConfigLink::updateLatencies(TimeLord *timeLord)
     latency[1] = timeLord->getSimCycles(latency_str[1], __FUNCTION__);
 }
 
-bool ConfigStatistic::setComponent(ComponentId_t id)
-{
-    component = id;
-
-    return true;
-}
-
-
 void ConfigStatistic::addParameter(const std::string& key, const std::string& value, bool overwrite)
 {
     bool bk = params.enableVerify(false);
     params.insert(key, value, overwrite);
     params.enableVerify(bk);
 }
-
-
-bool ConfigStatistic::setOutput(size_t id)
-{
-    outputID = id;
-    return true;
-}
-
-
-bool ConfigStatistic::setFrequency(const std::string& freq)
-{
-    UnitAlgebra uaFreq(freq);
-    if ( uaFreq.hasUnits("s") || uaFreq.hasUnits("hz") ) {
-        outputFrequency = uaFreq;
-        return true;
-    }
-    return false;
-}
-
-
-std::pair<bool, std::string> ConfigStatistic::verifyStatsAndComponents(const ConfigGraph *graph)
-{
-  const ConfigComponent* configComp = graph->findComponent(component);
-  bool ok = Factory::getFactory()->DoesComponentInfoStatisticNameExist(configComp->type, name);
-
-  if ( !ok ) {
-      std::stringstream ss;
-      ss << "Component " << configComp->name << " does not support statistic " << name;
-      return std::make_pair(false, ss.str());
-  }
-
-  return std::make_pair(true, "");
-}
-
 
 
 bool ConfigStatGroup::addComponent(ComponentId_t id)
@@ -240,7 +198,7 @@ ComponentId_t ConfigComponent::getNextSubComponentID()
         // it
         return graph->findComponent(COMPONENT_ID_MASK(id))->getNextSubComponentID();
     }
-        
+
 }
 
 StatisticId_t ConfigComponent::getNextStatisticID()
@@ -456,16 +414,16 @@ ConfigComponent* ConfigComponent::findSubComponentByName(const std::string& name
     return nullptr;
 }
 
-ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::string& name, const std::string& type, int slot_num)
+ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::string& name)
 {
     /* Check for existing statistic with this name */
     for ( auto &i : statistics ) {
-        if ( i.name == name && i.slot_num == slot_num )
+        if ( i.name == name)
             return nullptr;
     }
 
     statistics.emplace_back(
-        ConfigStatistic(sid, graph, name, slot_num, type));
+        ConfigStatistic(sid, name));
 
     return &(statistics.back());
 }
@@ -486,38 +444,6 @@ const ConfigStatistic* ConfigComponent::findStatistic(ComponentId_t sid) const
     }
   }
   return nullptr;
-}
-
-ConfigStatistic* ConfigComponent::findStatisticByName(const std::string& name)
-{
-    size_t colon_index = name.find(":");
-    std::string slot = name.substr(0,colon_index);
-
-    // Get the slot number
-    int slot_num = 0;
-    size_t bracket_index = slot.find("[");
-    if ( bracket_index == std::string::npos ) {
-        // No brackets, slot_num 0
-        slot_num = 0;
-    }
-    else {
-        size_t close_index = slot.find("]");
-        size_t length = close_index - bracket_index - 1;
-        slot_num = Core::from_string<int>(slot.substr(bracket_index+1,length));
-        slot = slot.substr(0,bracket_index);
-    }
-
-    // Now, see if we have something in this slot and slot_num
-    for ( auto& sc : statistics ) {
-        if ( sc.name == slot && sc.slot_num == slot_num ) {
-            // Found the subcomponent
-            if ( colon_index == std::string::npos ) {
-                // Last level of hierarchy
-                return &sc;
-            }
-        }
-    }
-    return nullptr;
 }
 
 std::vector<LinkId_t> ConfigComponent::allLinks() const {
@@ -693,9 +619,9 @@ ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::
 }
 
 StatisticId_t
-ConfigGraph::addStatistic(StatisticId_t id, const std::string& name, const std::string& type, int slot_num)
+ConfigGraph::addStatistic(StatisticId_t id, const std::string& name)
 {
-    stats.push_back(ConfigStatistic(id, this, name, slot_num, type));
+    stats.push_back(ConfigStatistic(id, name));
     return id;
 }
 
