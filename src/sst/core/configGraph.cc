@@ -151,6 +151,7 @@ ConfigComponent::cloneWithoutLinks() const
     ret.params = params;
     ret.statLoadLevel = statLoadLevel;
     ret.enabledStatistics = enabledStatistics;
+    ret.statistics = statistics;
     ret.coords = coords;
     for ( auto &i : subComponents ) {
         ret.subComponents.emplace_back(i.cloneWithoutLinks());
@@ -174,6 +175,7 @@ ConfigComponent::cloneWithoutLinksOrParams() const
     ret.rank = rank;
     ret.statLoadLevel = statLoadLevel;
     ret.enabledStatistics = enabledStatistics;
+    ret.statistics = statistics;
     ret.coords = coords;
     for ( auto &i : subComponents ) {
         ret.subComponents.emplace_back(i.cloneWithoutLinksOrParams());
@@ -203,19 +205,11 @@ ComponentId_t ConfigComponent::getNextSubComponentID()
 
 StatisticId_t ConfigComponent::getNextStatisticID()
 {
-  // If we are the ultimate component, get nextSubID and increment
+  // If we are the ultimate component, get nextStatID and increment
   // for next time
-  if ( id == COMPONENT_ID_MASK(id) ) {
-      uint16_t statId = nextStatID;
-      nextStatID++;
-      return STATISTIC_ID_CREATE( id, statId );
-  }
-  else {
-      // Get the ultimate parent and call getNextSubComponentID on
-      // it
-      return graph->findComponent(COMPONENT_ID_MASK(id))->getNextStatisticID();
-  }
-
+  uint16_t statId = nextStatID;
+  nextStatID++;
+  return statId;
 }
 
 void ConfigComponent::setRank(RankInfo r)
@@ -357,6 +351,8 @@ ConfigComponent* ConfigComponent::addSubComponent(ComponentId_t sid, const std::
 
     subComponents.emplace_back(
         ConfigComponent(sid, graph, name, slot_num, type, this->weight, this->rank));
+    std::cout << "ConfigComponent::addSubComponent " << sid << " " << name << " " << statistics.size() << " "
+              << subComponents.size() << std::endl;
 
     return &(subComponents.back());
 }
@@ -368,9 +364,11 @@ ConfigComponent* ConfigComponent::findSubComponent(ComponentId_t sid)
 
 const ConfigComponent* ConfigComponent::findSubComponent(ComponentId_t sid) const
 {
+  std::cout << "ConfigGraph::findSubComponent:"<< sid << std::endl;
     if ( sid == this->id ) return this;
 
     for ( auto &s : subComponents ) {
+      std::cout << "ConfigGraph::findSubComponent recurse :"<< sid << std::endl;
         const ConfigComponent* res = s.findSubComponent(sid);
         if ( res != nullptr )
             return res;
@@ -424,6 +422,8 @@ ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::str
 
     statistics.emplace_back(
         ConfigStatistic(sid, name));
+    std::cout << "ConfigComponent::addStatistic sc size " << sid << " " << name << " " << statistics.size() << " "
+              << subComponents.size() << std::endl;
 
     return &(statistics.back());
 }
@@ -604,6 +604,8 @@ ConfigGraph::checkForStructuralErrors()
 ComponentId_t
 ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::string& type, float weight, RankInfo rank)
 {
+  std::cout << "ConfigGraph::addComponent: !!! : " << name << " "
+           << id  << " " << stats.size() << " " << comps.size() << std::endl;
     comps.push_back(ConfigComponent(id, this, name, type, weight, rank));
     return id;
 }
@@ -611,14 +613,9 @@ ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::
 ComponentId_t
 ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::string& type)
 {
-    comps.push_back(ConfigComponent(id, this, name, type, 1.0f, RankInfo()));
-    return id;
-}
-
-StatisticId_t
-ConfigGraph::addStatistic(StatisticId_t id, const std::string& name)
-{
-    stats.push_back(ConfigStatistic(id, name));
+  std::cout << "ConfigGraph::addComponent: !!! : " << name << " "
+           << id  << " " << stats.size() << " " << comps.size() << std::endl;
+  comps.push_back(ConfigComponent(id, this, name, type, 1.0f, RankInfo()));
     return id;
 }
 
@@ -796,16 +793,15 @@ ConfigComponent* ConfigGraph::findComponent(ComponentId_t id)
 
 const ConfigComponent* ConfigGraph::findComponent(ComponentId_t id) const
 {
+    std::cout << "ConfigGraph::findComponent: "<< id << std::endl;
     /* Check to make sure we're part of the same component */
     if ( COMPONENT_ID_MASK(id) == id ) {
+      std::cout << "ConfigGraph::findComponent: OK "<< id << std::endl;
         return &comps[id];
     }
+    std::cout << "ConfigGraph::findComponent: Not OK  "<< COMPONENT_ID_MASK(id) << std::endl;
 
     return comps[COMPONENT_ID_MASK(id)].findSubComponent(id);
-}
-
-bool ConfigGraph::containsStatistic(StatisticId_t id) const {
-    return stats.contains(id);
 }
 
 ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id)
@@ -815,10 +811,9 @@ ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id)
 
 const ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
 {
+  std::cout << "ConfigGraph::findStatistic "<< id << std::endl;
     /* Check to make sure we're part of the same statistic */
-    if ( STATISTIC_ID_MASK(id) == id ) {
-        return &stats[id];
-    }
+   return comps[STATISTIC_ID_MASK(id)].findStatistic(id);
 
     return nullptr;
 }

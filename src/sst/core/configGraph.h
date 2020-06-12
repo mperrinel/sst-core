@@ -233,7 +233,7 @@ public:
     std::vector<ConfigStatistic>  statistics; /*!< List of subcomponents */
     std::vector<double>           coords;
     uint16_t                      nextSubID;         /*!< Next subID to use for children */
-    uint16_t                      nextStatID;         /*!< Next subID to use for children */
+    uint16_t                      nextStatID;         /*!< Next statID to use for children */
 
     static constexpr ComponentId_t null_id = std::numeric_limits<ComponentId_t>::max();
 
@@ -377,10 +377,6 @@ public:
     ComponentId_t addComponent(ComponentId_t id, const std::string& name, const std::string& type, float weight, RankInfo rank);
     /** Create a new component */
     ComponentId_t addComponent(ComponentId_t id, const std::string& name, const std::string& type);
-
-
-    /** Create a new statistic */
-    StatisticId_t addStatistic(StatisticId_t id, const std::string& name);
 
     /** Set the statistic output module */
     void setStatisticOutput(const std::string& name);

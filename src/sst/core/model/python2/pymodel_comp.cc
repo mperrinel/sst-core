@@ -256,21 +256,23 @@ static PyObject* compSetSubComponent(PyObject *self, PyObject *args)
 
 static PyObject* compSetStatistic(PyObject *self, PyObject *args)
 {
-    char *name = nullptr, *type = nullptr;
-    int slot = 0;
+    char *name = nullptr;
 
-
-    if ( !PyArg_ParseTuple(args, "ss|i", &name, &type, &slot) )
+    if ( !PyArg_ParseTuple(args, "s", &name) )
         return nullptr;
 
     ConfigComponent *c = getComp(self);
     if ( nullptr == c ) return nullptr;
 
+    std::cout << "compSetStatistic: !!! : " << c->name << " " << name<< std::endl;
     StatisticId_t stat_id = c->getNextStatisticID();
+    std::cout << "compSetStatistic stat_id: !!! : " << stat_id<< std::endl;
     ConfigStatistic* sub = c->addStatistic(stat_id, name);
     if ( nullptr != sub ) {
         PyObject *argList = Py_BuildValue("Ok", self, stat_id);
+        std::cout << "compSetStatistic stat_id: !!! : " << sub->name<< std::endl;
         PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatType, argList);
+        std::cout << "compSetStatistic stat_id: AFTER !PyObject_CallObject!! : " << sub->name<< std::endl;
         Py_DECREF(argList);
         return subObj;
     }
@@ -513,6 +515,7 @@ PyTypeObject PyModel_ComponentType = {
 
 static int subCompInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
+    std::cout << "subCompInit !!!" << std::endl;
     ComponentId_t id;
     PyObject *parent;
     // if ( !PyArg_ParseTuple(args, "Ossii", &parent, &name, &type, &slot, &id) )

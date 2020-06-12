@@ -56,6 +56,7 @@ int PyStatistic::compare(PyStatistic *other) {
 
 static int statInit(StatisticPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
+    std::cout << "statInit !!!" << std::endl;
     StatisticId_t id;
     PyObject *parent;
     // if ( !PyArg_ParseTuple(args, "Ossii", &parent, &name, &type, &slot, &id) )

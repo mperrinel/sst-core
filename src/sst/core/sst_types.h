@@ -34,7 +34,7 @@ typedef double          Time_t;
 #define SUBCOMPONENT_ID_CREATE(compId, sCompId) ((((uint64_t)sCompId) << COMPONENT_ID_BITS) | compId)
 #define STATISTIC_ID_BITS 16
 #define STATISTIC_ID_MASK(x) ((x) >> STATISTIC_ID_BITS)
-#define STATISTIC_ID_CREATE(compId, statId) ((((uint64_t)statId) << STATISTIC_ID_BITS) | compId)
+#define STATISTIC_ID_CREATE(compId, statId) ((((uint64_t)statId) << STATISTIC_ID_BITS) | statId)
 #define COMPDEFINED_SUBCOMPONENT_ID_CREATE(compId, sCompId) ((((uint64_t)sCompId) << COMPONENT_ID_BITS) | compId | 0x8000000000000000ULL)
 #define COMPDEFINED_SUBCOMPONENT_ID_MASK(x) ((x) >> 63)
 
