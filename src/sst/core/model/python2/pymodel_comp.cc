@@ -49,7 +49,7 @@ ConfigComponent* ComponentHolder::getSubComp(const std::string& name, int slot_n
 
 ConfigStatistic* ComponentHolder::getStatistic(const std::string& name)
 {
-    for ( auto &stat : getComp()->statistics ) {
+    for ( auto &stat : getComp()->enabledStatistics ) {
         if ( stat.name == name)
             return &stat;
     }
@@ -264,15 +264,11 @@ static PyObject* compSetStatistic(PyObject *self, PyObject *args)
     ConfigComponent *c = getComp(self);
     if ( nullptr == c ) return nullptr;
 
-    std::cout << "compSetStatistic: !!! : " << c->name << " " << name<< std::endl;
     StatisticId_t stat_id = c->getNextStatisticID();
-    std::cout << "compSetStatistic stat_id: !!! : " << stat_id<< std::endl;
     ConfigStatistic* sub = c->addStatistic(stat_id, name);
     if ( nullptr != sub ) {
         PyObject *argList = Py_BuildValue("Ok", self, stat_id);
-        std::cout << "compSetStatistic stat_id: !!! : " << sub->name<< std::endl;
         PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatType, argList);
-        std::cout << "compSetStatistic stat_id: AFTER !PyObject_CallObject!! : " << sub->name<< std::endl;
         Py_DECREF(argList);
         return subObj;
     }

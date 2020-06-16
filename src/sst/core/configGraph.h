@@ -134,6 +134,11 @@ public:
       id(id),
       name(name)
       { }
+
+    ConfigStatistic(const std::string& name) :
+      name(name)
+      { }
+
     ConfigStatistic() {} /* Do not use */
 
     inline const StatisticId_t& key()const { return id; }
@@ -228,9 +233,9 @@ public:
     std::vector<LinkId_t>         links;             /*!< List of links connected */
     Params                        params;            /*!< Set of Parameters */
     uint8_t                       statLoadLevel;     /*!< Statistic load level for this component */
-    std::vector<Statistics::StatisticInfo> enabledStatistics; /*!< List of statistics to be enabled */
+//    std::vector<Statistics::StatisticInfo> enabledStatistics; /*!< List of statistics to be enabled */
     std::vector<ConfigComponent>  subComponents; /*!< List of subcomponents */
-    std::vector<ConfigStatistic>  statistics; /*!< List of subcomponents */
+    std::vector<ConfigStatistic>  enabledStatistics; /*!< List of subcomponents */
     std::vector<double>           coords;
     uint16_t                      nextSubID;         /*!< Next subID to use for children */
     uint16_t                      nextStatID;         /*!< Next statID to use for children */
@@ -282,7 +287,7 @@ public:
         ser & statLoadLevel;
         ser & enabledStatistics;
         ser & subComponents;
-        ser & statistics;
+//        ser & statistics;
     }
 
     ImplementSerializable(SST::ConfigComponent)
