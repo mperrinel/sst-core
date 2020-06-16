@@ -587,7 +587,6 @@ ConfigGraph::checkForStructuralErrors()
 ComponentId_t
 ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::string& type, float weight, RankInfo rank)
 {
-           << id  << " " << stats.size() << " " << comps.size() << std::endl;
     comps.push_back(ConfigComponent(id, this, name, type, weight, rank));
     return id;
 }
@@ -595,8 +594,7 @@ ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::
 ComponentId_t
 ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::string& type)
 {
-           << id  << " " << stats.size() << " " << comps.size() << std::endl;
-  comps.push_back(ConfigComponent(id, this, name, type, 1.0f, RankInfo()));
+    comps.push_back(ConfigComponent(id, this, name, type, 1.0f, RankInfo()));
     return id;
 }
 
