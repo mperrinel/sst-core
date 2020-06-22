@@ -37,7 +37,7 @@ StatisticGroup::StatisticGroup(const ConfigStatGroup &csg) :
         Output::getDefaultObject().fatal(CALL_INFO, 1, "Statistic Output type %s cannot handle Statistic Groups\n", output->getStatisticOutputName().c_str());
     }
 
-    for ( auto & kv : csg.statMap ) {
+    for ( auto & kv : csg.statistics ) {
         statNames.push_back(kv.first);
     }
 }

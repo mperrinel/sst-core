@@ -45,6 +45,9 @@ public:
 
     void outputExodus(const std::string& fileroot);
 
+    /** True if this StatOutput can handle StatisticGroups */
+    virtual bool acceptsGroups() const { return true; }
+
 protected:
     /** Perform a check of provided parameters
      * @return True if all required parameters and options are acceptable

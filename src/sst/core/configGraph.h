@@ -164,7 +164,8 @@ public:
 class ConfigStatGroup : public SST::Core::Serialization::serializable {
 public:
     std::string name;
-    std::map<std::string, Params> statMap;
+//    std::map<std::string, Params> statistics;
+    std::vector<StatisticId_t> statistics;
     std::vector<ComponentId_t> components;
     size_t outputID;
     UnitAlgebra outputFrequency;
@@ -189,7 +190,7 @@ public:
 
     void serialize_order(SST::Core::Serialization::serializer &ser) override {
         ser & name;
-        ser & statMap;
+        ser & statistics;
         ser & components;
         ser & outputID;
         ser & outputFrequency;
@@ -237,8 +238,8 @@ public:
     std::vector<LinkId_t>         links;             /*!< List of links connected */
     Params                        params;            /*!< Set of Parameters */
     uint8_t                       statLoadLevel;     /*!< Statistic load level for this component */
+    std::vector<ConfigStatistic>  enabledStatistics; /*!< List of statistics to be enabled */
     std::vector<ConfigComponent>  subComponents; /*!< List of subcomponents */
-    std::vector<ConfigStatistic>  enabledStatistics; /*!< List of subcomponents */
     std::vector<double>           coords;
     uint16_t                      nextSubID;         /*!< Next subID to use for children */
     uint16_t                      nextStatID;         /*!< Next statID to use for children */
@@ -464,6 +465,7 @@ public:
     {
         ser & links;
         ser & comps;
+        ser & stats;
         ser & statOutputs;
         ser & statLoadLevel;
         ser & statGroups;

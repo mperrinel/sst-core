@@ -92,7 +92,7 @@ void StatisticOutputEXODUS::startOfSimulation()
 
 void StatisticOutputEXODUS::endOfSimulation()
 {
-
+std::cout << "StatisticOutputEXODUS::endOfSimulation() "<< std::endl;
   std::multimap<std::string, std::multimap<uint64_t, int>> tf_nodes_map;
   for (const auto & eventIte : m_traffic_progress_map){
     auto nodeId = eventIte.second.compName_;
@@ -121,10 +121,10 @@ void StatisticOutputEXODUS::endOfSimulation()
     std::cout<<std::endl;
   }
 
-  StatVTK::outputExodus(m_FilePath, std::move(m_traffic_progress_map),
-                        std::move(m_vtk_topology_cube_list_),
-                        std::move(m_vtk_link_list_)
-                        );
+//  StatVTK::outputExodus(m_FilePath, std::move(m_traffic_progress_map),
+//                        std::move(m_vtk_topology_cube_list_),
+//                        std::move(m_vtk_link_list_)
+//                        );
 
   // Close the file
   closeFile();

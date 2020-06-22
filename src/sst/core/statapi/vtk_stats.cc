@@ -612,6 +612,7 @@ void StatVTK::outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUS
 
 void StatVTK::addData_impl(uint64_t time, int port, double intensity) {
 
+  std::cout << "StatVTK::addData_impl() " << this->getCompName()<< std::endl;
   // Update the traffic_event_map with the a new traffic event
   lastTime_ = time;
   auto it = traffic_event_map_.find(time);
