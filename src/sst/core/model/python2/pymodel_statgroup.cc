@@ -73,7 +73,7 @@ static PyObject* sgAddStat(PyObject *self, PyObject *args)
     PyErr_Clear();
     ConfigStatGroup *csg = ((StatGroupPy_t*)self)->ptr;
 
-    if ( PyObject_TypeCheck(args, &PyModel_StatisticType)) {
+    if ( PyObject_TypeCheck(args, &PyModel_StatType)) {
         csg->addStatistic(((StatisticPy_t*)args)->obj->getID());
     } else {
         PyErr_SetString(PyExc_TypeError, "Expected Statistic type");

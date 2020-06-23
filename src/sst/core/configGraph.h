@@ -175,7 +175,7 @@ public:
 
 
     bool addComponent(ComponentId_t id);
-    bool addStatistic(const std::string& name, Params &p);
+    bool addStatistic(StatisticId_t id);
     bool setOutput(size_t id);
     bool setFrequency(const std::string& freq);
 

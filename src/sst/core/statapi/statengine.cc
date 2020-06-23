@@ -58,9 +58,10 @@ void StatisticProcessingEngine::setup(ConfigGraph *graph)
         for ( ComponentId_t compID : cfg.second.components ) {
             ConfigComponent *ccomp = graph->findComponent(compID);
             if ( ccomp ) { /* Should always be true */
-                for ( auto &kv : cfg.second.statistics ) {
-                    ccomp->enableStatistic(kv.first);
-                    ccomp->setStatisticParameters(kv.first, kv.second);
+                for ( StatisticId_t statId : cfg.second.statistics ) {
+                    ConfigStatistic *cstat = graph->findStatistic(statId);
+                    ccomp->addStatistic(statId, cstat->name);
+                    ccomp->setStatisticParameters(cstat->name, cstat->params);
                 }
             }
         }
@@ -291,9 +292,11 @@ StatisticOutput* StatisticProcessingEngine::getOutputForStatistic(const Statisti
 StatisticGroup& StatisticProcessingEngine::getGroupForStatistic(const StatisticBase *stat) const
 {
     for ( auto & g : m_statGroups ) {
-        if ( g.claimsStatistic(stat) ) {
-            return const_cast<StatisticGroup&>(g);
-        }
+//        if ( g.claimsStatistic(stat) ) {
+//            return const_cast<StatisticGroup&>(g);
+//        }
+        return const_cast<StatisticGroup&>(g);
+
     }
     return const_cast<StatisticGroup&>(m_defaultGroup);
 }

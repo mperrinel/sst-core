@@ -38,7 +38,7 @@ StatisticGroup::StatisticGroup(const ConfigStatGroup &csg) :
     }
 
     for ( auto & kv : csg.statistics ) {
-        statNames.push_back(kv.first);
+        statistics.push_back(kv);
     }
 }
 
@@ -51,16 +51,16 @@ bool StatisticGroup::containsStatistic(const StatisticBase *stat) const
 }
 
 
-bool StatisticGroup::claimsStatistic(const StatisticBase *stat) const
-{
-    if ( isDefault ) return true;
-    if ( std::find(statNames.begin(), statNames.end(), stat->getStatName()) != statNames.end() ) {
-        if ( std::find(components.begin(), components.end(), stat->getComponent()->getId()) != components.end() )
-            return true;
-    }
+//bool StatisticGroup::claimsStatistic(const StatisticBase *stat) const
+//{
+//    if ( isDefault ) return true;
+//    if ( std::find(statistics.begin(), statistics.end(), stat->getStatName()) != statistics.end() ) {
+//        if ( std::find(components.begin(), components.end(), stat->getComponent()->getId()) != components.end() )
+//            return true;
+//    }
 
-    return false;
-}
+//    return false;
+//}
 
 
 void StatisticGroup::addStatistic(StatisticBase *stat)
