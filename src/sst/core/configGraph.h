@@ -126,12 +126,14 @@ private:
 
 class ConfigStatistic : public SST::Core::Serialization::serializable {
 public:
-    StatisticId_t id;                /*!< Unique ID of this component */
+    StatisticId_t id;                /*!< Unique ID of this statistic */
+    ComponentId_t compId;                /*!< Unique ID of this component */
     std::string name;
     Params params;
 
-    ConfigStatistic(StatisticId_t id, const std::string& name) :
+    ConfigStatistic(StatisticId_t id, ComponentId_t compId, const std::string& name) :
       id(id),
+      compId(compId),
       name(name)
       { }
 
@@ -143,7 +145,6 @@ public:
 
     inline const StatisticId_t& key()const { return id; }
 
-    bool setComponent(ComponentId_t id);
     void addParameter(const std::string& key, const std::string& value, bool overwrite);
 
 

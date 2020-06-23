@@ -511,7 +511,6 @@ PyTypeObject PyModel_ComponentType = {
 
 static int subCompInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
-    std::cout << "subCompInit !!!" << std::endl;
     ComponentId_t id;
     PyObject *parent;
     // if ( !PyArg_ParseTuple(args, "Ossii", &parent, &name, &type, &slot, &id) )

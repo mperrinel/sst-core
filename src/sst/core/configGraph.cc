@@ -196,9 +196,16 @@ StatisticId_t ConfigComponent::getNextStatisticID()
 {
   // If we are the ultimate component, get nextStatID and increment
   // for next time
-  uint16_t statId = nextStatID;
-  nextStatID++;
-  return statId;
+  if ( id == COMPONENT_ID_MASK(id) ) {
+      uint16_t statId = nextStatID;
+      nextStatID++;
+      return STATISTIC_ID_CREATE( id, statId );
+  }
+  else {
+      // Get the ultimate parent and call getNextStatisticID on
+      // it
+      return graph->findComponent(COMPONENT_ID_MASK(id))->getNextStatisticID();
+  }
 }
 
 void ConfigComponent::setRank(RankInfo r)
@@ -406,7 +413,8 @@ ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::str
     }
 
     enabledStatistics.emplace_back(
-        ConfigStatistic(sid, name));
+        ConfigStatistic(sid, id, name));
+
 
     return &(enabledStatistics.back());
 }
@@ -416,7 +424,7 @@ ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid)
     return const_cast<ConfigStatistic*>(const_cast<const ConfigComponent*>(this)->findStatistic(sid));
 }
 
-const ConfigStatistic* ConfigComponent::findStatistic(ComponentId_t sid) const
+const ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
 {
   for ( const auto &s : enabledStatistics ) {
     if ( s.id == sid ) {
@@ -788,7 +796,7 @@ ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id)
 const ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
 {
     /* Check to make sure we're part of the same statistic */
-   return comps[STATISTIC_ID_MASK(id)].findStatistic(id);
+   return comps[COMPONENT_ID_MASK(id)].findStatistic(id);
 
    return nullptr;
 }
