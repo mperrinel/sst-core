@@ -150,7 +150,7 @@ static PyObject* sgSetFreq(PyObject *self, PyObject *args)
 
 
 static PyMethodDef sgMethods[] = {
-    {   "addStatistic", sgAddStat, METH_VARARGS,
+    {   "addStatistic", sgAddStat, METH_O,
         "Add a new statistic to the group" },
     {   "addComponent", sgAddComp, METH_O,
         "Add a component to the group" },
