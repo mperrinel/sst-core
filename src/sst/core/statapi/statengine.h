@@ -113,7 +113,6 @@ private:
     bool registerStatisticCore(StatisticBase* stat, uint8_t comp_stat_level);
 
     StatisticOutput* getOutputForStatistic(const StatisticBase *stat) const;
-    StatisticGroup& getGroupForStatistic(const StatisticBase *stat) const;
     bool addPeriodicBasedStatistic(const UnitAlgebra& freq, StatisticBase* Stat);
     bool addEventBasedStatistic(const UnitAlgebra& count, StatisticBase* Stat);
     bool addEndOfSimStatistic(StatisticBase* Stat);

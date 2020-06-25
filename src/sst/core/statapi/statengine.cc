@@ -110,41 +110,46 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
         return false;
     }
 
-    StatisticGroup &group = getGroupForStatistic(stat);
-
-    if ( group.isDefault ) {
-        // If the mode is Periodic Based, the add the statistic to the
-        // StatisticProcessingEngine otherwise add it as an Event Based Stat.
-        UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
-        bool success = true;
-        switch (stat->getRegisteredCollectionMode()){
-        case StatisticBase::STAT_MODE_PERIODIC:
-          success = addPeriodicBasedStatistic(collectionRate, stat);
-          break;
-        case StatisticBase::STAT_MODE_COUNT:
-          success = addEventBasedStatistic(collectionRate, stat);
-          break;
-        case StatisticBase::STAT_MODE_DUMP_AT_END:
-          success = addEndOfSimStatistic(stat);
-          break;
-        case StatisticBase::STAT_MODE_UNDEFINED:
-          m_output.fatal(CALL_INFO, 1, "Stat mode is undefined for %s in registerStatistic",
-                         stat->getFullStatName().c_str());
-          break;
-        }
-        if (!success) return false;
-    } else {
-        switch (stat->getRegisteredCollectionMode()){
-        case StatisticBase::STAT_MODE_PERIODIC:
-        case StatisticBase::STAT_MODE_DUMP_AT_END:
-          break;
-        default:
-          m_output.output("ERROR: Statistics in groups must be periodic or dump at end\n");
-          return false;
-        }
+    UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
+    bool success = true;
+    switch (stat->getRegisteredCollectionMode()){
+      case StatisticBase::STAT_MODE_PERIODIC:
+        success = addPeriodicBasedStatistic(collectionRate, stat);
+        break;
+      case StatisticBase::STAT_MODE_COUNT:
+        success = addEventBasedStatistic(collectionRate, stat);
+        break;
+      case StatisticBase::STAT_MODE_DUMP_AT_END:
+        success = addEndOfSimStatistic(stat);
+        break;
+      case StatisticBase::STAT_MODE_UNDEFINED:
+        m_output.fatal(CALL_INFO, 1, "Stat mode is undefined for %s in registerStatistic",
+                       stat->getFullStatName().c_str());
+      break;
     }
 
-    // Make sure that the wireup has not been completed
+    StatisticGroup group;
+    for ( auto & g : m_statGroups ) {
+       for ( auto  compId : g.components ) {
+          if ( compId == stat->getComponent()->getId() ) {
+              std::cout << "Add the statistic to the group: " << g.name <<std::endl;
+              group = g;
+          }
+      }
+    }
+
+    if (group.isDefault) {
+      std::cout << "Group is the default one: " << group.name <<std::endl;
+      return false;
+    }
+
+    std::cout << "Group is not the default one: " << group.name <<std::endl;
+
+   // TODO: STAT_MODE_COUNT | STAT_MODE_UNDEFINED => :
+   //   m_output.output("ERROR: Statistics in groups must be periodic or dump at end\n");
+   //      return false;
+
+    // TODO: Make sure that the wireup has not been completed
     if (true == stat->getComponent()->getSimulation()->isWireUpFinished()) {
       if (!group.output->supportsDynamicRegistration()){
         m_output.fatal(CALL_INFO, 1, "ERROR: Statistic %s - "
@@ -158,6 +163,7 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
              stat->getFullStatName().c_str());
       }
     }
+
 
     /* All checks pass.  Add the stat */
     group.addStatistic(stat);
@@ -284,22 +290,16 @@ StatisticProcessingEngine::castError(const std::string& type, const std::string&
 
 StatisticOutput* StatisticProcessingEngine::getOutputForStatistic(const StatisticBase *stat) const
 {
-    return getGroupForStatistic(stat).output;
-}
-
-
-/* Return the group that would claim this stat */
-StatisticGroup& StatisticProcessingEngine::getGroupForStatistic(const StatisticBase *stat) const
-{
-    for ( auto & g : m_statGroups ) {
-//        if ( g.claimsStatistic(stat) ) {
-//            return const_cast<StatisticGroup&>(g);
-//        }
-        return const_cast<StatisticGroup&>(g);
-
+  for ( auto & g : m_statGroups ) {
+     for ( auto  compId : g.components ) {
+        if ( compId == stat->getComponent()->getId() ) {
+            return g.output;
+        }
     }
-    return const_cast<StatisticGroup&>(m_defaultGroup);
+  }
+
 }
+
 
 bool
 StatisticProcessingEngine::addEndOfSimStatistic(StatisticBase* /*stat*/)
@@ -456,6 +456,7 @@ void StatisticProcessingEngine::performStatisticOutput(StatisticBase* stat, bool
 void StatisticProcessingEngine::performStatisticOutputImpl(StatisticBase* stat, bool endOfSimFlag /*=false*/)
 {
 
+  std::cout << "StatisticProcessingEngine::performStatisticOutputImpl " << std::endl;
     StatisticOutput* statOutput = getOutputForStatistic(stat);
 
     // Has the simulation started?

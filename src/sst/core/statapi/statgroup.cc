@@ -32,7 +32,7 @@ StatisticGroup::StatisticGroup(const ConfigStatGroup &csg) :
     outputFreq(csg.outputFrequency),
     components(csg.components)
 {
-
+    std::cout << "StatisticGroup::StatisticGroup: "<< csg.name << std::endl;
     if ( !output->acceptsGroups() ) {
         Output::getDefaultObject().fatal(CALL_INFO, 1, "Statistic Output type %s cannot handle Statistic Groups\n", output->getStatisticOutputName().c_str());
     }
