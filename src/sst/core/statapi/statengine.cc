@@ -55,16 +55,21 @@ void StatisticProcessingEngine::setup(ConfigGraph *graph)
         m_statGroups.emplace_back(cfg.second);
 
         /* Force component / statistic registration for Group stats*/
-        for ( ComponentId_t compID : cfg.second.components ) {
-            ConfigComponent *ccomp = graph->findComponent(compID);
-            if ( ccomp ) { /* Should always be true */
-                for ( StatisticId_t statId : cfg.second.statistics ) {
-                    ConfigStatistic *cstat = graph->findStatistic(statId);
-                    ccomp->addStatistic(statId, cstat->name);
-                    ccomp->setStatisticParameters(cstat->name, cstat->params);
-                }
-            }
-        }
+        // TORM.: old way, we don't want to use components since it can/should be empty at the beggiging
+        // TODO: new way, add the statistic to the component usignt statistics variable members of group
+//        for ( ComponentId_t compID : cfg.second.components ) {
+//            ConfigComponent *ccomp = graph->findComponent(compID);
+//            if ( ccomp ) { /* Should always be true */
+
+//            }
+//        }
+//        for ( StatisticId_t statId : cfg.second.statistics ) {
+//            ConfigStatistic *cstat = graph->findStatistic(statId);
+//            compId = cstat->compId;//
+//            ConfigComponent *ccomp = graph->findComponent(compID);
+//            ccomp->addStatistic(statId, cstat->name);
+//            ccomp->setStatisticParameters(cstat->name, cstat->params);
+//        }
     }
 
 }
@@ -112,6 +117,8 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
 
     UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
 
+    // TODO:  use the statistics instead of the components
+    // TODO:  Change group for a pointer
     StatisticGroup group;
     for ( auto & g : m_statGroups ) {
        for ( auto  compId : g.components ) {

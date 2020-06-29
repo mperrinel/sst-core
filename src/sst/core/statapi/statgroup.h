@@ -31,8 +31,6 @@ public:
     StatisticGroup() : isDefault(true), name("default") { };
     StatisticGroup(const ConfigStatGroup &csg);
 
-    bool containsStatistic(const StatisticBase *stat) const;
-    bool claimsStatistic(const StatisticBase *stat) const;
     void addStatistic(StatisticBase *stat);
 
     bool isDefault;
