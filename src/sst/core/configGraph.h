@@ -139,9 +139,9 @@ public:
 
     ConfigStatistic(const std::string& name) :
       name(name)
-      { }
+      { id = stat_null_id; }
 
-    ConfigStatistic() {} /* Do not use */
+    ConfigStatistic() {id = stat_null_id; } /* Do not use */
 
     inline const StatisticId_t& key()const { return id; }
 
@@ -154,6 +154,9 @@ public:
     }
 
     ImplementSerializable(SST::ConfigStatistic)
+
+
+    static constexpr StatisticId_t stat_null_id = std::numeric_limits<StatisticId_t>::max();
 
 };
 
@@ -234,7 +237,6 @@ public:
     std::vector<LinkId_t>         links;             /*!< List of links connected */
     Params                        params;            /*!< Set of Parameters */
     uint8_t                       statLoadLevel;     /*!< Statistic load level for this component */
-//    std::vector<Statistics::StatisticInfo> enabledStatistics; /*!< List of statistics to be enabled */
     std::vector<ConfigComponent>  subComponents; /*!< List of subcomponents */
     std::vector<ConfigStatistic>  enabledStatistics; /*!< List of subcomponents */
     std::vector<double>           coords;
@@ -265,9 +267,10 @@ public:
     ConfigComponent* findSubComponent(ComponentId_t);
     const ConfigComponent* findSubComponent(ComponentId_t) const;
     ConfigComponent* findSubComponentByName(const std::string& name);
-    ConfigStatistic* addStatistic(StatisticId_t, const std::string& name);
+    ConfigStatistic* addStatistic(StatisticId_t, const std::string& statisticName);
     ConfigStatistic* findStatistic(StatisticId_t);
     const ConfigStatistic* findStatistic(StatisticId_t) const;
+    const ConfigStatistic* findStatisticByName(const std::string& statisticName) const;
     void enableStatistic(const std::string& statisticName, bool recursively = false);
     void addStatisticParameter(const std::string& statisticName, const std::string& param, const std::string& value, bool recursively = false);
     void setStatisticParameters(const std::string& statisticName, const Params &params, bool recursively = false);

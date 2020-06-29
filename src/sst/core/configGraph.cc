@@ -404,19 +404,44 @@ ConfigComponent* ConfigComponent::findSubComponentByName(const std::string& name
     return nullptr;
 }
 
-ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::string& name)
+ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::string& statisticName)
 {
-    /* Check for existing statistic with this name */
-    for ( auto &i : enabledStatistics ) {
-        if ( i.name == name)
-            return nullptr;
+    // Check for Enable All Statistics
+    if (statisticName == STATALLFLAG) {
+        // Force the STATALLFLAG to always be on the bottom of the list.
+        // First check to see if anything is in the vector, if vector is empty,
+        // a STATALLFLAG flag will be added to the vector
+        if (false == enabledStatistics.empty()) {
+            // The vector is populated, so see if the STATALLFLAG
+            // already exists if it does, we are done
+            if (STATALLFLAG != enabledStatistics.back().name) {
+                // Add a STATALLFLAG to end of the vector
+                enabledStatistics.emplace_back(STATALLFLAG);
+                return &(enabledStatistics.back());
+            }
+        } else {
+            // Add a STATALLFLAG to end of the vector
+            enabledStatistics.emplace_back(STATALLFLAG);
+            return &(enabledStatistics.back());
+        }
+    } else {
+
+      /* Check for existing statistic with this name */
+      for ( auto &i : enabledStatistics ) {
+          if ( i.name == statisticName)
+          {
+              return nullptr;
+          }
+      }
+
+      enabledStatistics.emplace(enabledStatistics.begin(),
+          ConfigStatistic(sid, id, statisticName));
+
+
+      return &(enabledStatistics.front());
     }
 
-    enabledStatistics.emplace_back(
-        ConfigStatistic(sid, id, name));
-
-
-    return &(enabledStatistics.back());
+    return nullptr;
 }
 
 ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid)

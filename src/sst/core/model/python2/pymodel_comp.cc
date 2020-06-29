@@ -265,12 +265,12 @@ static PyObject* compSetStatistic(PyObject *self, PyObject *args)
     if ( nullptr == c ) return nullptr;
 
     StatisticId_t stat_id = c->getNextStatisticID();
-    ConfigStatistic* sub = c->addStatistic(stat_id, name);
-    if ( nullptr != sub ) {
+    ConfigStatistic* stat = c->addStatistic(stat_id, name);
+    if ( nullptr != stat ) {
         PyObject *argList = Py_BuildValue("Ok", self, stat_id);
-        PyObject *subObj = PyObject_CallObject((PyObject*)&PyModel_StatType, argList);
+        PyObject *statObj = PyObject_CallObject((PyObject*)&PyModel_StatType, argList);
         Py_DECREF(argList);
-        return subObj;
+        return statObj;
     }
 
     char errMsg[1024] = {0};
