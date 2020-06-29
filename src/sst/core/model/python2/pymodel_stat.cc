@@ -24,9 +24,6 @@ REENABLE_WARNING
 #include "sst/core/model/python2/pymodel_stat.h"
 
 #include "sst/core/sst_types.h"
-#include "sst/core/simulation.h"
-#include "sst/core/component.h"
-#include "sst/core/subcomponent.h"
 #include "sst/core/configGraph.h"
 
 using namespace SST::Core;
@@ -124,38 +121,6 @@ static PyObject* statAddParams(PyObject *self, PyObject *args)
     }
     return PyLong_FromLong(count);
 }
-
-
-//static PyObject* compSetCoords(PyObject *self, PyObject *args)
-//{
-//    std::vector<double> coords(3, 0.0);
-//    if ( !PyArg_ParseTuple(args, "d|dd", &coords[0], &coords[1], &coords[2]) ) {
-//        PyObject* list = nullptr;
-//        if ( PyArg_ParseTuple(args, "O!", &PyList_Type, &list) && PyList_Size(list) > 0 ) {
-//            coords.clear();
-//            for ( Py_ssize_t i = 0 ; i < PyList_Size(list) ; i++ ) {
-//                coords.push_back(PyFloat_AsDouble(PyList_GetItem(list, 0)));
-//                if ( PyErr_Occurred() ) goto error;
-//            }
-//        } else if ( PyArg_ParseTuple(args, "O!", &PyTuple_Type, &list) && PyTuple_Size(list) > 0 ) {
-//            coords.clear();
-//            for ( Py_ssize_t i = 0 ; i < PyTuple_Size(list) ; i++ ) {
-//                coords.push_back(PyFloat_AsDouble(PyTuple_GetItem(list, 0)));
-//                if ( PyErr_Occurred() ) goto error;
-//            }
-//        } else {
-//error:
-//            PyErr_SetString(PyExc_TypeError, "compSetCoords() expects arguments of 1-3 doubles, or a list/tuple of doubles");
-//            return nullptr;
-//        }
-//    }
-
-//    ConfigComponent *c = getComp(self);
-//    if ( nullptr == c ) return nullptr;
-//    c->setCoordinates(coords);
-
-//    return PyLong_FromLong(0);
-//}
 
 static PyMethodDef statisticMethods[] = {
     {   "addParam",

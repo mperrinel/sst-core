@@ -836,8 +836,6 @@ void SSTPythonModelDefinition::initModel(const std::string& script_file, int ver
 
     PySys_SetArgv(argc, argv);
 
-    std::cout << " SSTPythonModelDefinition::initModel " << std::endl;
-
     // Initialize our types
     PyModel_ComponentType.tp_new = PyType_GenericNew;
     PyModel_SubComponentType.tp_new = PyType_GenericNew;

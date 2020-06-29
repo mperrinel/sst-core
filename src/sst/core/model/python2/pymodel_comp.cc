@@ -274,7 +274,7 @@ static PyObject* compSetStatistic(PyObject *self, PyObject *args)
     }
 
     char errMsg[1024] = {0};
-    snprintf(errMsg, sizeof(errMsg)-1, "Failed to create statistic %s on %s.  Already attached a statistic at that slot name and number?\n", name, c->name.c_str());
+    snprintf(errMsg, sizeof(errMsg)-1, "Failed to create statistic %s on %s. Already attached a statistic with that name ?\n", name, c->name.c_str());
     PyErr_SetString(PyExc_RuntimeError, errMsg);
     return nullptr;
 }
