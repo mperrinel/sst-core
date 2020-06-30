@@ -54,24 +54,25 @@ void StatisticProcessingEngine::setup(ConfigGraph *graph)
     for ( auto & cfg : graph->getStatGroups() ) {
         m_statGroups.emplace_back(cfg.second);
 
-        /* Force component / statistic registration for Group stats*/
-        // TORM.: old way, we don't want to use components since it can/should be empty at the beggiging
-        // TODO: new way, add the statistic to the component usignt statistics variable members of group
-//        for ( ComponentId_t compID : cfg.second.components ) {
-//            ConfigComponent *ccomp = graph->findComponent(compID);
-//            if ( ccomp ) { /* Should always be true */
+        // Register to the group all the component Id associated to the statistic
+        StatisticGroup &currentLastGroup = m_statGroups.back();
+        for ( StatisticId_t statId : cfg.second.statistics ) {
+            ConfigStatistic *cstat = graph->findStatistic(statId);
+            ComponentId_t compId = cstat->compId;
+            currentLastGroup.components.emplace_back(compId);
+        }
 
-//            }
-//        }
-//        for ( StatisticId_t statId : cfg.second.statistics ) {
-//            ConfigStatistic *cstat = graph->findStatistic(statId);
-//            compId = cstat->compId;//
-//            ConfigComponent *ccomp = graph->findComponent(compID);
-//            ccomp->addStatistic(statId, cstat->name);
-//            ccomp->setStatisticParameters(cstat->name, cstat->params);
-//        }
+        // Add the statistics of the group to every component of the group.
+        for ( StatisticId_t statId : cfg.second.statistics ) {
+            ConfigStatistic *cstat = graph->findStatistic(statId);
+
+             for ( ComponentId_t compId : currentLastGroup.components ) {
+               ConfigComponent *ccomp = graph->findComponent(compId);
+               ccomp->addStatistic(statId, cstat->name);
+               ccomp->setStatisticParameters(cstat->name, cstat->params);
+             }
+        }
     }
-
 }
 
 StatisticProcessingEngine::~StatisticProcessingEngine()
@@ -117,20 +118,22 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
 
     UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
 
-    // TODO:  use the statistics instead of the components
-    // TODO:  Change group for a pointer
-    StatisticGroup group;
+    StatisticGroup *group = nullptr;
     for ( auto & g : m_statGroups ) {
        for ( auto  compId : g.components ) {
           if ( compId == stat->getComponent()->getId() ) {
               std::cout << "Find a non default group : " << g.name << " for the statistic: " << stat->getFullStatName() <<std::endl;
-              group = g;
+              group = &g;
           }
       }
     }
 
-    if ( group.isDefault ) {
-        std::cout << "Group is the default one: " << group.name <<std::endl;
+    if ( nullptr == group ) {
+      group = &m_defaultGroup;
+    }
+
+    if ( group->isDefault ) {
+        std::cout << "Group is the default one: " << group->name <<std::endl;
         // If the mode is Periodic Based, the add the statistic to the
         // StatisticProcessingEngine otherwise add it as an Event Based Stat.
         UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
@@ -152,7 +155,7 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
         }
         if (!success) return false;
     } else {
-      std::cout << "Group is not the default one: " << group.name <<std::endl;
+      std::cout << "Group is not the default one: " << group->name <<std::endl;
       switch (stat->getRegisteredCollectionMode()){
       case StatisticBase::STAT_MODE_PERIODIC:
       case StatisticBase::STAT_MODE_DUMP_AT_END:
@@ -165,12 +168,12 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
 
     // TODO: Make sure that the wireup has not been completed
     if (true == stat->getComponent()->getSimulation()->isWireUpFinished()) {
-      if (!group.output->supportsDynamicRegistration()){
+      if (!group->output->supportsDynamicRegistration()){
         m_output.fatal(CALL_INFO, 1, "ERROR: Statistic %s - "
              "Cannot be registered for output %s after the Components have been wired up. "
              "Statistics on output %s must be registered on Component creation. exiting...\n",
-             stat->getFullStatName().c_str(), group.output->getStatisticOutputName().c_str(),
-             group.output->getStatisticOutputName().c_str());
+             stat->getFullStatName().c_str(), group->output->getStatisticOutputName().c_str(),
+             group->output->getStatisticOutputName().c_str());
       } else if (stat->getRegisteredCollectionMode() != StatisticBase::STAT_MODE_DUMP_AT_END) {
         m_output.fatal(CALL_INFO, 1, "ERROR: Statistic %s - "
              "Stats can only be registered dynamically in DUMP_AT_END mode with no periodic clock",
@@ -180,12 +183,12 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat, uint8
 
 
     /* All checks pass.  Add the stat */
-    std::cout << "BEFORE Add the Statistic into the group: " << group.name << " " << group.statistics.size()<< " " << group.components.size()<< std::endl;
+    std::cout << "BEFORE Add the Statistic into the group: " << group->name << " " << group->statistics.size()<< " " << group->components.size()<< std::endl;
 
-    group.addStatistic(stat);
-    std::cout << "AFTER Add the Statistic into the group: " << group.name << " " << group.statistics.size()<< " " << group.components.size()<< std::endl;
+    group->addStatistic(stat);
+    std::cout << "AFTER Add the Statistic into the group: " << group->name << " " << group->statistics.size()<< " " << group->components.size()<< std::endl;
 
-    if ( group.isDefault ) {
+    if ( group->isDefault ) {
         getOutputForStatistic(stat)->registerStatistic(stat);
     }
 
