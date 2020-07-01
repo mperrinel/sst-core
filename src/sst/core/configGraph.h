@@ -339,8 +339,6 @@ private:
 // typedef SparseVectorMap<std::string,ConfigLink> ConfigLinkMap_t;
 /** Map IDs to Components */
 typedef SparseVectorMap<ComponentId_t,ConfigComponent> ConfigComponentMap_t;
-/** Map IDs to Statitics */
-typedef SparseVectorMap<StatisticId_t,ConfigStatistic> ConfigStatisticMap_t;
 /** Map names to Components */
 // typedef std::map<std::string,ConfigComponent*> ConfigComponentNameMap_t;
 /** Map names to Parameter Sets: XML only */
@@ -444,11 +442,6 @@ public:
     ConfigComponent* findComponent(ComponentId_t);
     const ConfigComponent* findComponent(ComponentId_t) const;
 
-    /** Return the map of links */
-    ConfigStatisticMap_t& getStatMap() {
-        return stats;
-    }
-
     bool containsStatistic(StatisticId_t id) const;
     ConfigStatistic* findStatistic(StatisticId_t);
     const ConfigStatistic* findStatistic(StatisticId_t) const;
@@ -482,7 +475,6 @@ private:
 
     ConfigLinkMap_t      links;
     ConfigComponentMap_t comps;
-    ConfigStatisticMap_t stats;
     // ConfigComponentNameMap_t compsByName;
     std::map<std::string, ConfigStatGroup> statGroups;
 
