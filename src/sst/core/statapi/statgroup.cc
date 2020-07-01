@@ -32,7 +32,6 @@ StatisticGroup::StatisticGroup(const ConfigStatGroup &csg) :
     outputFreq(csg.outputFrequency),
     components(csg.components)
 {
-    std::cout << "StatisticGroup::StatisticGroup: "<< csg.name << std::endl;
     if ( !output->acceptsGroups() ) {
         Output::getDefaultObject().fatal(CALL_INFO, 1, "Statistic Output type %s cannot handle Statistic Groups\n", output->getStatisticOutputName().c_str());
     }
@@ -40,8 +39,6 @@ StatisticGroup::StatisticGroup(const ConfigStatGroup &csg) :
     for ( auto & kv : csg.statistics ) {
         statistics.push_back(kv);
     }
-    std::cout << "StatisticGroup::number of stats:: "     << statistics.size() << std::endl;
-    std::cout << "StatisticGroup::number of components:: "<< components.size() << std::endl;
 }
 
 void StatisticGroup::addStatistic(StatisticBase *stat)
