@@ -290,7 +290,6 @@ public:
         ser & statLoadLevel;
         ser & enabledStatistics;
         ser & subComponents;
-//        ser & statistics;
     }
 
     ImplementSerializable(SST::ConfigComponent)
