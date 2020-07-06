@@ -444,11 +444,6 @@ ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::str
     return nullptr;
 }
 
-ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid)
-{
-    return const_cast<ConfigStatistic*>(const_cast<const ConfigComponent*>(this)->findStatistic(sid));
-}
-
 ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
 {
   for ( const ConfigStatistic &s : enabledStatistics ) {
@@ -812,11 +807,6 @@ const ConfigComponent* ConfigGraph::findComponent(ComponentId_t id) const
     }
 
     return comps[COMPONENT_ID_MASK(id)].findSubComponent(id);
-}
-
-ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id)
-{
-    return const_cast<ConfigStatistic*>(const_cast<const ConfigGraph*>(this)->findStatistic(id));
 }
 
 ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const

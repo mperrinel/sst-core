@@ -268,7 +268,6 @@ public:
     const ConfigComponent* findSubComponent(ComponentId_t) const;
     ConfigComponent* findSubComponentByName(const std::string& name);
     ConfigStatistic* addStatistic(StatisticId_t, const std::string& statisticName);
-    ConfigStatistic* findStatistic(StatisticId_t);
     ConfigStatistic* findStatistic(StatisticId_t) const;
     const ConfigStatistic* findStatisticByName(const std::string& statisticName) const;
     void enableStatistic(const std::string& statisticName, bool recursively = false);
@@ -443,7 +442,6 @@ public:
     const ConfigComponent* findComponent(ComponentId_t) const;
 
     bool containsStatistic(StatisticId_t id) const;
-    ConfigStatistic* findStatistic(StatisticId_t);
     ConfigStatistic* findStatistic(StatisticId_t) const;
 
 
