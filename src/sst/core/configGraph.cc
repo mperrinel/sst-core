@@ -449,11 +449,11 @@ ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid)
     return const_cast<ConfigStatistic*>(const_cast<const ConfigComponent*>(this)->findStatistic(sid));
 }
 
-const ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
+ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
 {
-  for ( const auto &s : enabledStatistics ) {
+  for ( const ConfigStatistic &s : enabledStatistics ) {
     if ( s.id == sid ) {
-      const ConfigStatistic* res = const_cast<ConfigStatistic*>(&s);
+      ConfigStatistic* res = const_cast<ConfigStatistic*>(&s);
       if ( res != nullptr ) {
           return res;
       }
@@ -818,7 +818,7 @@ ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id)
     return const_cast<ConfigStatistic*>(const_cast<const ConfigGraph*>(this)->findStatistic(id));
 }
 
-const ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
+ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
 {
     /* Check to make sure we're part of the same statistic */
    return comps[COMPONENT_ID_MASK(id)].findStatistic(id);

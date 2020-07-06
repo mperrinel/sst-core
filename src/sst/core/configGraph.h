@@ -269,7 +269,7 @@ public:
     ConfigComponent* findSubComponentByName(const std::string& name);
     ConfigStatistic* addStatistic(StatisticId_t, const std::string& statisticName);
     ConfigStatistic* findStatistic(StatisticId_t);
-    const ConfigStatistic* findStatistic(StatisticId_t) const;
+    ConfigStatistic* findStatistic(StatisticId_t) const;
     const ConfigStatistic* findStatisticByName(const std::string& statisticName) const;
     void enableStatistic(const std::string& statisticName, bool recursively = false);
     void addStatisticParameter(const std::string& statisticName, const std::string& param, const std::string& value, bool recursively = false);
@@ -444,7 +444,7 @@ public:
 
     bool containsStatistic(StatisticId_t id) const;
     ConfigStatistic* findStatistic(StatisticId_t);
-    const ConfigStatistic* findStatistic(StatisticId_t) const;
+    ConfigStatistic* findStatistic(StatisticId_t) const;
 
 
     /** Return the map of links */
