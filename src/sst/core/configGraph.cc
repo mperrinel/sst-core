@@ -515,6 +515,7 @@ ConfigGraph::postCreationCleanup()
     for ( ConfigLink &link : getLinkMap() ) {
         link.updateLatencies(timeLord);
     }
+
 }
 
 bool
