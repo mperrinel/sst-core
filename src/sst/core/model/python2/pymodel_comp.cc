@@ -22,6 +22,7 @@ REENABLE_WARNING
 
 #include "sst/core/model/python2/pymodel.h"
 #include "sst/core/model/python2/pymodel_comp.h"
+#include "sst/core/model/python2/pymodel_stat.h"
 #include "sst/core/model/python2/pymodel_link.h"
 
 #include "sst/core/sst_types.h"
@@ -46,6 +47,15 @@ ConfigComponent* ComponentHolder::getSubComp(const std::string& name, int slot_n
     return nullptr;
 }
 
+ConfigStatistic* ComponentHolder::getStatistic(const std::string& name)
+{
+    for ( auto &stat : getComp()->enabledStatistics ) {
+        if ( stat.name == name)
+            return &stat;
+    }
+    return nullptr;
+}
+
 ComponentId_t ComponentHolder::getID()
 {
     return id;
@@ -66,12 +76,9 @@ int ComponentHolder::compare(ComponentHolder *other) {
     else return 0;    
 }
 
-
-
 int PySubComponent::getSlot() {
     return getComp()->slot_num;
 }
-
 
 static int compInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
@@ -247,6 +254,31 @@ static PyObject* compSetSubComponent(PyObject *self, PyObject *args)
     return nullptr;
 }
 
+static PyObject* compSetStatistic(PyObject *self, PyObject *args)
+{
+    char *name = nullptr;
+
+    if ( !PyArg_ParseTuple(args, "s", &name) )
+        return nullptr;
+
+    ConfigComponent *c = getComp(self);
+    if ( nullptr == c ) return nullptr;
+
+    StatisticId_t stat_id = c->getNextStatisticID();
+    ConfigStatistic* stat = c->addStatistic(stat_id, name);
+    if ( nullptr != stat ) {
+        PyObject *argList = Py_BuildValue("Ok", self, stat_id);
+        PyObject *statObj = PyObject_CallObject((PyObject*)&PyModel_StatType, argList);
+        Py_DECREF(argList);
+        return statObj;
+    }
+
+    char errMsg[1024] = {0};
+    snprintf(errMsg, sizeof(errMsg)-1, "Failed to create statistic %s on %s. Already attached a statistic with that name ?\n", name, c->name.c_str());
+    PyErr_SetString(PyExc_RuntimeError, errMsg);
+    return nullptr;
+}
+
 static PyObject* compSetCoords(PyObject *self, PyObject *args)
 {
     std::vector<double> coords(3, 0.0);
@@ -414,6 +446,9 @@ static PyMethodDef componentMethods[] = {
     {   "enableStatistics",
         compEnableStatistics, METH_VARARGS,
         "Enables Multiple Statistics in the component with optional parameters"},
+    {   "setStatistic",
+        compSetStatistic, METH_VARARGS,
+        "Bind a statistic with name <name>"},
     {   "setSubComponent",
         compSetSubComponent, METH_VARARGS,
         "Bind a subcomponent to slot <name>, with type <type>"},
@@ -474,10 +509,6 @@ PyTypeObject PyModel_ComponentType = {
     0,                         /* tp_version_tag */
 };
 
-
-
-
-
 static int subCompInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwds))
 {
     ComponentId_t id;
@@ -495,7 +526,6 @@ static int subCompInit(ComponentPy_t *self, PyObject *args, PyObject *UNUSED(kwd
     return 0;
 }
 
-
 static void subCompDealloc(ComponentPy_t *self)
 {
     if ( self->obj ) {
@@ -503,8 +533,6 @@ static void subCompDealloc(ComponentPy_t *self)
     }
     self->ob_type->tp_free((PyObject*)self);
 }
-
-
 
 static PyMethodDef subComponentMethods[] = {
     {   "addParam",
@@ -525,6 +553,9 @@ static PyMethodDef subComponentMethods[] = {
     {   "enableStatistics",
         compEnableStatistics, METH_VARARGS,
         "Enables Multiple Statistics in the component with optional parameters"},
+    {   "setStatistic",
+        compSetStatistic, METH_VARARGS,
+        "Bind a statistic with name <name>"},
     {   "setSubComponent",
         compSetSubComponent, METH_VARARGS,
         "Bind a subcomponent to slot <name>, with type <type>"},
@@ -584,7 +615,6 @@ PyTypeObject PyModel_SubComponentType = {
     nullptr,                         /* tp_del */
     0,                         /* tp_version_tag */
 };
-
 
 }  /* extern C */
 

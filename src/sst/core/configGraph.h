@@ -124,6 +124,41 @@ private:
 
 };
 
+class ConfigStatistic : public SST::Core::Serialization::serializable {
+public:
+    StatisticId_t id;                /*!< Unique ID of this statistic */
+    ComponentId_t compId;                /*!< Unique ID of this component */
+    std::string name;
+    Params params;
+
+    ConfigStatistic(StatisticId_t id, ComponentId_t compId, const std::string& name) :
+      id(id),
+      compId(compId),
+      name(name)
+      { }
+
+    ConfigStatistic(const std::string& name) :
+      name(name)
+      { id = stat_null_id; }
+
+    ConfigStatistic() {id = stat_null_id; } /* Do not use */
+
+    inline const StatisticId_t& key()const { return id; }
+
+    void addParameter(const std::string& key, const std::string& value, bool overwrite);
+
+
+    void serialize_order(SST::Core::Serialization::serializer &ser) override {
+        ser & name;
+        ser & params;
+    }
+
+    ImplementSerializable(SST::ConfigStatistic)
+
+
+    static constexpr StatisticId_t stat_null_id = std::numeric_limits<StatisticId_t>::max();
+
+};
 
 
 class ConfigStatGroup : public SST::Core::Serialization::serializable {
@@ -202,10 +237,11 @@ public:
     std::vector<LinkId_t>         links;             /*!< List of links connected */
     Params                        params;            /*!< Set of Parameters */
     uint8_t                       statLoadLevel;     /*!< Statistic load level for this component */
-    std::vector<Statistics::StatisticInfo> enabledStatistics; /*!< List of statistics to be enabled */
     std::vector<ConfigComponent>  subComponents; /*!< List of subcomponents */
+    std::vector<ConfigStatistic>  enabledStatistics; /*!< List of subcomponents */
     std::vector<double>           coords;
     uint16_t                      nextSubID;         /*!< Next subID to use for children */
+    uint16_t                      nextStatID;         /*!< Next statID to use for children */
 
     static constexpr ComponentId_t null_id = std::numeric_limits<ComponentId_t>::max();
 
@@ -218,9 +254,10 @@ public:
     ConfigComponent cloneWithoutLinksOrParams() const;
 
     ~ConfigComponent() {}
-    ConfigComponent() : id(null_id), statLoadLevel(STATISTICLOADLEVELUNINITIALIZED), nextSubID(1) { }
+    ConfigComponent() : id(null_id), statLoadLevel(STATISTICLOADLEVELUNINITIALIZED), nextSubID(1), nextStatID(1) { }
 
     ComponentId_t getNextSubComponentID();
+    StatisticId_t getNextStatisticID();
 
     void setRank(RankInfo r);
     void setWeight(double w);
@@ -230,6 +267,9 @@ public:
     ConfigComponent* findSubComponent(ComponentId_t);
     const ConfigComponent* findSubComponent(ComponentId_t) const;
     ConfigComponent* findSubComponentByName(const std::string& name);
+    ConfigStatistic* addStatistic(StatisticId_t, const std::string& statisticName);
+    ConfigStatistic* findStatistic(StatisticId_t) const;
+    const ConfigStatistic* findStatisticByName(const std::string& statisticName) const;
     void enableStatistic(const std::string& statisticName, bool recursively = false);
     void addStatisticParameter(const std::string& statisticName, const std::string& param, const std::string& value, bool recursively = false);
     void setStatisticParameters(const std::string& statisticName, const Params &params, bool recursively = false);
@@ -266,7 +306,8 @@ private:
         weight(weight),
         rank(rank),
         statLoadLevel(STATISTICLOADLEVELUNINITIALIZED),
-        nextSubID(1)
+        nextSubID(1),
+        nextStatID(1)
     {
         coords.resize(3, 0.0);
     }
@@ -280,7 +321,8 @@ private:
         weight(weight),
         rank(rank),
         statLoadLevel(STATISTICLOADLEVELUNINITIALIZED),
-        nextSubID(1)
+        nextSubID(1),
+        nextStatID(1)
     {
         coords.resize(3, 0.0);
     }
@@ -305,7 +347,7 @@ typedef std::map<std::string,std::string> VariableMap_t;
 class PartitionGraph;
 
 /** A Configuration Graph
- *  A graph representing Components and Links
+ *  A graph representing Components, Statistics and Links
  */
 class ConfigGraph : public SST::Core::Serialization::serializable {
 public:
@@ -340,7 +382,6 @@ public:
     ComponentId_t addComponent(ComponentId_t id, const std::string& name, const std::string& type, float weight, RankInfo rank);
     /** Create a new component */
     ComponentId_t addComponent(ComponentId_t id, const std::string& name, const std::string& type);
-
 
     /** Set the statistic output module */
     void setStatisticOutput(const std::string& name);
@@ -398,6 +439,10 @@ public:
     bool containsComponent(ComponentId_t id) const;
     ConfigComponent* findComponent(ComponentId_t);
     const ConfigComponent* findComponent(ComponentId_t) const;
+
+    bool containsStatistic(StatisticId_t id) const;
+    ConfigStatistic* findStatistic(StatisticId_t) const;
+
 
     /** Return the map of links */
     ConfigLinkMap_t& getLinkMap() {

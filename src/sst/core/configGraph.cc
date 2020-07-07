@@ -36,6 +36,13 @@ void ConfigLink::updateLatencies(TimeLord *timeLord)
     latency[1] = timeLord->getSimCycles(latency_str[1], __FUNCTION__);
 }
 
+void ConfigStatistic::addParameter(const std::string& key, const std::string& value, bool overwrite)
+{
+    bool bk = params.enableVerify(false);
+    params.insert(key, value, overwrite);
+    params.enableVerify(bk);
+}
+
 
 bool ConfigStatGroup::addComponent(ComponentId_t id)
 {
@@ -143,6 +150,7 @@ ConfigComponent::cloneWithoutLinks() const
     for ( auto &i : subComponents ) {
         ret.subComponents.emplace_back(i.cloneWithoutLinks());
     }
+
     return ret;
 }
 
@@ -163,6 +171,7 @@ ConfigComponent::cloneWithoutLinksOrParams() const
     for ( auto &i : subComponents ) {
         ret.subComponents.emplace_back(i.cloneWithoutLinksOrParams());
     }
+
     return ret;
 }
 
@@ -180,10 +189,24 @@ ComponentId_t ConfigComponent::getNextSubComponentID()
         // it
         return graph->findComponent(COMPONENT_ID_MASK(id))->getNextSubComponentID();
     }
-        
+
 }
 
-
+StatisticId_t ConfigComponent::getNextStatisticID()
+{
+  // If we are the ultimate component, get nextStatID and increment
+  // for next time
+  if ( id == COMPONENT_ID_MASK(id) ) {
+      uint16_t statId = nextStatID;
+      nextStatID++;
+      return STATISTIC_ID_CREATE( id, statId );
+  }
+  else {
+      // Get the ultimate parent and call getNextStatisticID on
+      // it
+      return graph->findComponent(COMPONENT_ID_MASK(id))->getNextStatisticID();
+  }
+}
 
 void ConfigComponent::setRank(RankInfo r)
 {
@@ -381,6 +404,69 @@ ConfigComponent* ConfigComponent::findSubComponentByName(const std::string& name
     return nullptr;
 }
 
+ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::string& statisticName)
+{
+    // Check for Enable All Statistics
+    if (statisticName == STATALLFLAG) {
+        // Force the STATALLFLAG to always be on the bottom of the list.
+        // First check to see if anything is in the vector, if vector is empty,
+        // a STATALLFLAG flag will be added to the vector
+        if (false == enabledStatistics.empty()) {
+            // The vector is populated, so see if the STATALLFLAG
+            // already exists if it does, we are done
+            if (STATALLFLAG != enabledStatistics.back().name) {
+                // Add a STATALLFLAG to end of the vector
+                enabledStatistics.emplace_back(STATALLFLAG);
+                return &(enabledStatistics.back());
+            }
+        } else {
+            // Add a STATALLFLAG to end of the vector
+            enabledStatistics.emplace_back(STATALLFLAG);
+            return &(enabledStatistics.back());
+        }
+    } else {
+
+      /* Check for existing statistic with this name */
+      for ( auto &i : enabledStatistics ) {
+          if ( i.name == statisticName)
+          {
+              return nullptr;
+          }
+      }
+
+      enabledStatistics.emplace(enabledStatistics.begin(),
+          ConfigStatistic(sid, id, statisticName));
+
+
+      return &(enabledStatistics.front());
+    }
+
+    return nullptr;
+}
+
+ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
+{
+  // Check for the current component statistics
+  for ( const ConfigStatistic &s : enabledStatistics ) {
+    if ( s.id == sid ) {
+      ConfigStatistic* res = const_cast<ConfigStatistic*>(&s);
+      if ( res != nullptr ) {
+          return res;
+      }
+    }
+  }
+
+  // Check for the subComponents statistics
+  for ( auto &s : subComponents ) {
+      ConfigStatistic* res = s.findStatistic(sid);
+      if ( res != nullptr ) {
+          return res;
+      }
+  }
+
+  return nullptr;
+}
+
 std::vector<LinkId_t> ConfigComponent::allLinks() const {
     std::vector<LinkId_t> res;
     res.insert(res.end(), links.begin(), links.end());
@@ -436,7 +522,6 @@ ConfigGraph::postCreationCleanup()
     }
 
 }
-
 
 bool
 ConfigGraph::checkForStructuralErrors()
@@ -538,7 +623,6 @@ ConfigGraph::checkForStructuralErrors()
     return found_error;
 }
 
-
 ComponentId_t
 ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::string& type, float weight, RankInfo rank)
 {
@@ -552,8 +636,6 @@ ConfigGraph::addComponent(ComponentId_t id, const std::string& name, const std::
     comps.push_back(ConfigComponent(id, this, name, type, 1.0f, RankInfo()));
     return id;
 }
-
-
 
 void
 ConfigGraph::setStatisticOutput(const std::string& name)
@@ -579,8 +661,6 @@ ConfigGraph::setStatisticLoadLevel(uint8_t loadLevel)
     statLoadLevel = loadLevel;
 }
 
-
-
 void
 ConfigGraph::enableStatisticForComponentName(const std::string& ComponentName, const std::string& statisticName, bool recursively)
 {
@@ -595,10 +675,6 @@ ConfigGraph::enableStatisticForComponentName(const std::string& ComponentName, c
         }
     }
 }
-
-
-
-
 
 template <class PredicateFunc, class UnaryFunc>
 size_t for_each_subcomp_if(ConfigComponent &c, PredicateFunc p, UnaryFunc f) {
@@ -741,6 +817,11 @@ const ConfigComponent* ConfigGraph::findComponent(ComponentId_t id) const
     }
 
     return comps[COMPONENT_ID_MASK(id)].findSubComponent(id);
+}
+
+ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
+{
+   return comps[COMPONENT_ID_MASK(id)].findStatistic(id);
 }
 
 
