@@ -446,6 +446,7 @@ ConfigStatistic* ConfigComponent::addStatistic(StatisticId_t sid, const std::str
 
 ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
 {
+  // Check for the current component statistics
   for ( const ConfigStatistic &s : enabledStatistics ) {
     if ( s.id == sid ) {
       ConfigStatistic* res = const_cast<ConfigStatistic*>(&s);
@@ -454,6 +455,15 @@ ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
       }
     }
   }
+
+  // Check for the subComponents statistics
+  for ( auto &s : subComponents ) {
+      ConfigStatistic* res = s.findStatistic(sid);
+      if ( res != nullptr ) {
+          return res;
+      }
+  }
+
   return nullptr;
 }
 
@@ -811,10 +821,7 @@ const ConfigComponent* ConfigGraph::findComponent(ComponentId_t id) const
 
 ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
 {
-    /* Check to make sure we're part of the same statistic */
    return comps[COMPONENT_ID_MASK(id)].findStatistic(id);
-
-   return nullptr;
 }
 
 
