@@ -27,6 +27,8 @@ sst_core_python3_sources = \
 	model/python3/pymodel_link.cc \
 	model/python3/pymodel_comp.h \
 	model/python3/pymodel_comp.cc \
+	model/python3/pymodel_stat.h \
+	model/python3/pymodel_stat.cc \
 	model/python3/pymodel_statgroup.h \
 	model/python3/pymodel_statgroup.cc
 

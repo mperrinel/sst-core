@@ -29,6 +29,7 @@ REENABLE_WARNING
 #include "sst/core/sst_types.h"
 #include "sst/core/model/python3/pymodel.h"
 #include "sst/core/model/python3/pymodel_comp.h"
+#include "sst/core/model/python3/pymodel_stat.h"
 #include "sst/core/model/python3/pymodel_link.h"
 #include "sst/core/model/python3/pymodel_statgroup.h"
 #include "sst/core/model/element_python.h"
@@ -832,6 +833,7 @@ static PyObject* PyInit_sst(void)
     // Initialize our types
     PyModel_ComponentType.tp_new = PyType_GenericNew;
     PyModel_SubComponentType.tp_new = PyType_GenericNew;
+    PyModel_StatType.tp_new = PyType_GenericNew;
     PyModel_LinkType.tp_new = PyType_GenericNew;
     PyModel_StatGroupType.tp_new = PyType_GenericNew;
     PyModel_StatOutputType.tp_new = PyType_GenericNew;
@@ -839,6 +841,7 @@ static PyObject* PyInit_sst(void)
     if ( ( PyType_Ready(&PyModel_ComponentType) < 0 ) ||
          ( PyType_Ready(&PyModel_SubComponentType) < 0 ) ||
          ( PyType_Ready(&PyModel_LinkType) < 0 ) ||
+         ( PyType_Ready(&PyModel_StatType) < 0 ) ||
          ( PyType_Ready(&PyModel_StatGroupType) < 0 ) ||
          ( PyType_Ready(&PyModel_StatOutputType) < 0 ) ||
          ( PyType_Ready(&ModuleLoaderType) < 0 ) ) {
@@ -852,6 +855,7 @@ static PyObject* PyInit_sst(void)
 
     Py_INCREF(&PyModel_ComponentType);
     Py_INCREF(&PyModel_SubComponentType);
+    Py_INCREF(&PyModel_StatType);
     Py_INCREF(&PyModel_LinkType);
     Py_INCREF(&PyModel_StatGroupType);
     Py_INCREF(&PyModel_StatOutputType);
@@ -861,6 +865,7 @@ static PyObject* PyInit_sst(void)
     PyModule_AddObject(module, "Link", (PyObject*)&PyModel_LinkType);
     PyModule_AddObject(module, "Component", (PyObject*)&PyModel_ComponentType);
     PyModule_AddObject(module, "SubComponent", (PyObject*)&PyModel_SubComponentType);
+    PyModule_AddObject(module, "Statistic", (PyObject*)&PyModel_StatType);
     PyModule_AddObject(module, "StatisticGroup", (PyObject*)&PyModel_StatGroupType);
     PyModule_AddObject(module, "StatisticOutput", (PyObject*)&PyModel_StatOutputType);
     PyModule_AddObject(module, "ModuleLoader", (PyObject*)&ModuleLoaderType);
