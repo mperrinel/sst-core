@@ -87,6 +87,7 @@ SST_CHECK_PYTHON([], [AC_MSG_ERROR([Could not find Python, this is required for 
 SST_CHECK_LIBZ([have_zlib="yes"],[have_zlib="no"],[AC_MSG_ERROR([zlib was requested but could not be found.])])
 SST_CHECK_HDF5()
 SST_CHECK_MEM_POOL()
+SST_CHECK_VTK()
 
 SST_ENABLE_DEBUG_OUTPUT()
 SST_ENABLE_DEBUG_EVENT_TRACKING()
@@ -239,6 +240,12 @@ if test "x$sst_check_libz_happy" = "xyes" ; then
     printf "%38s : YES\n" "libz compression library"
 else
     printf "%38s : No\n" "libz compression library"
+fi
+
+if test -z "$vtk_path"; then
+    printf "%38s : No\n" "VTK"
+else
+    printf "%38s : $vtk_version @ $vtk_path\n" "VTK"
 fi
 
 echo "-------------------------------------------------------" 

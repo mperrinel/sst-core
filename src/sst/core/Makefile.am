@@ -342,3 +342,18 @@ sstinfo_x_SOURCES += statapi/statoutputhdf5.cc
 sstsim_x_LDADD += $(HDF5_LDFLAGS) $(HDF5_LIBS)
 sstinfo_x_LDADD += $(HDF5_LDFLAGS) $(HDF5_LIBS)
 endif
+
+if HAVE_VTK
+AM_CPPFLAGS += $(VTK_CPPFLAGS)
+sst_core_sources +=  \
+        statapi/statoutputexodus.cc \
+        statapi/vtk_stats.cc \
+        statapi/vtkTrafficSource.cc
+
+nobase_dist_sst_HEADERS += \
+        statapi/statoutputexodus.h \
+        statapi/vtk_stats.h \
+        statapi/vtkTrafficSource.h
+sstsim_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
+sstinfo_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
+endif
