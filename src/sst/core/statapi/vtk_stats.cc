@@ -43,6 +43,7 @@ Questions? Contact sst-macro-help@sandia.gov
 */
 #include "sst/core/statapi/vtk_stats.h"
 #include "sst/core/statapi/vtkTrafficSource.h"
+
 //#include <sstmac/backends/common/parallel_runtime.h>
 //#include <sstmac/hardware/topology/topology.h>
 //#include <sprockit/util.h>
@@ -399,8 +400,7 @@ namespace Statistics {
 void
 StatVTK::outputExodus(const std::string& fileroot,
     std::multimap<uint64_t, traffic_event>&& traffMap,
-    std::set<vtk_topology_cube, compare_topology>&& vtkTopologyCube,
-    std::set<vtk_link, compare_link>&& vtkLink)
+    std::set<Stat3DViz, compare_stat3dviz>&& vtkStat3dVizSet)
 {
 
   static constexpr int NUM_POINTS_PER_BOX = 8;
@@ -408,10 +408,20 @@ StatVTK::outputExodus(const std::string& fileroot,
 
   // Create the vtkPoints
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-  points->SetNumberOfPoints(NUM_POINTS_PER_BOX * vtkTopologyCube.size() +
-                            NUM_POINTS_PER_LINK * vtkLink.size());
-  std::cout << "Number of cube : "<<vtkTopologyCube.size() <<std::endl;
-  std::cout << "Number of Link : "<<vtkLink.size() <<std::endl;
+
+   // Compute the number of the points
+  int numberOfPoints = 0;
+  for (const auto& vtkStat3dViz : vtkStat3dVizSet) {
+      if (vtkStat3dViz.my_shape_->isBox()) {
+          numberOfPoints += NUM_POINTS_PER_BOX;
+      }
+      else if (vtkStat3dViz.my_shape_->isLine()) {
+          numberOfPoints += NUM_POINTS_PER_LINK;
+      }
+  }
+
+  points->SetNumberOfPoints(numberOfPoints);
+  std::cout << "Number of points : "<<numberOfPoints <<std::endl;
 
   // Create the vtkCellArray
   // 6 face cell array per switch
@@ -419,26 +429,36 @@ StatVTK::outputExodus(const std::string& fileroot,
   std::map<std::string, int> compNameToCellIdMap;
 
   std::vector<int> cell_types;
-  cell_types.reserve(vtkTopologyCube.size() + vtkLink.size());
+  cell_types.reserve(vtkStat3dVizSet.size());
 
   int i = 0;
   int cellId = 0;
-  for (const auto& cube : vtkTopologyCube) {
-    points->SetPoint(0 + i, cube.x_corner_, cube.y_corner_, 1);
-    points->SetPoint(1 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_, 1);
-    points->SetPoint(2 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_ + cube.y_size_, 1);
-    points->SetPoint(3 + i, cube.x_corner_, cube.y_corner_ + cube.y_size_, 1);
-    points->SetPoint(4 + i, cube.x_corner_, cube.y_corner_, 1 + cube.x_size_);
-    points->SetPoint(5 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_, 1 + cube.x_size_);
-    points->SetPoint(6 + i, cube.x_corner_ + cube.x_size_, cube.y_corner_ + cube.y_size_, 1 + cube.x_size_);
-    points->SetPoint(7 + i, cube.x_corner_, cube.y_corner_ + cube.y_size_, 1 + cube.x_size_);
-    i += NUM_POINTS_PER_BOX;
-
-    compNameToCellIdMap.emplace( cube.compName_, cellId);
-    cellId += 1;
+  for (const auto& vtkStat3dViz : vtkStat3dVizSet) {
+      Shape3D *shape = vtkStat3dViz.my_shape_;
+      if (vtkStat3dViz.my_shape_->isBox()) {
+          if (Box3D * box = dynamic_cast<Box3D *> (shape) ) {
+              points->SetPoint(0 + i, box->x_origin_, box->y_origin_, box->z_origin_);
+              points->SetPoint(1 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_);
+              points->SetPoint(2 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_);
+              points->SetPoint(3 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_);
+              points->SetPoint(4 + i, box->x_origin_, box->y_origin_, box->z_origin_ + box->z_extent_);
+              points->SetPoint(5 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_ + box->z_extent_);
+              points->SetPoint(6 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
+              points->SetPoint(7 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
+              i += NUM_POINTS_PER_BOX;
+          }
+          else {
+              // TODO: LOG ERROR, shape is box but the dynamic_cast fails ? That shouldn't happen
+          }
+      }
+      else if (vtkStat3dViz.my_shape_->isLine()) {
+          i += NUM_POINTS_PER_LINK;
+      }
+      compNameToCellIdMap.emplace( vtkStat3dViz.name_, cellId);
+      cellId += 1;
   }
 
-  for (int i = 0, j=0; i < vtkTopologyCube.size(); ++i, j+=NUM_POINTS_PER_BOX) {
+  for (int i = 0, j=0; i < vtkStat3dVizSet.size(); ++i, j+=NUM_POINTS_PER_BOX) {
     vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
     cell->GetPointIds()->SetId(0, j + 0);
     cell->GetPointIds()->SetId(1, j + 1);
@@ -453,22 +473,22 @@ StatVTK::outputExodus(const std::string& fileroot,
   };
 
   // LINK.
-  int pointsCount = vtkTopologyCube.size() * NUM_POINTS_PER_BOX;
-  i = 0;
-  for (const auto& link : vtkLink) {
-    vtk_topology_cube cube1 = *vtkTopologyCube.find(vtk_topology_cube(link.compName1_));
-    vtk_topology_cube cube2 = *vtkTopologyCube.find(vtk_topology_cube(link.compName2_));
-    points->SetPoint(pointsCount + i, cube1.x_corner_ + (double) (cube1.x_size_ ) /2.0, cube1.y_corner_ + + (double) (cube1.y_size_) /2.0, 1 + (double ) ( cube1.x_size_ ) / 2.0);
-    points->SetPoint(pointsCount + i + 1, cube2.x_corner_ + (double) (cube2.x_size_ ) /2.0, cube2.y_corner_ + + (double) (cube2.y_size_) /2.0, 1 + (double ) ( cube2.x_size_ ) / 2.0);
+//  int pointsCount = vtkTopologyCube.size() * NUM_POINTS_PER_BOX;
+//  i = 0;
+//  for (const auto& link : vtkLink) {
+//    vtk_topology_cube cube1 = *vtkTopologyCube.find(vtk_topology_cube(link.compName1_));
+//    vtk_topology_cube cube2 = *vtkTopologyCube.find(vtk_topology_cube(link.compName2_));
+//    points->SetPoint(pointsCount + i, cube1.x_corner_ + (double) (cube1.x_extent ) /2.0, cube1.y_origin_ + + (double) (cube1.y_extent_) /2.0, 1 + (double ) ( cube1.x_extent ) / 2.0);
+//    points->SetPoint(pointsCount + i + 1, cube2.x_corner_ + (double) (cube2.x_extent ) /2.0, cube2.y_origin_ + + (double) (cube2.y_extent_) /2.0, 1 + (double ) ( cube2.x_extent ) / 2.0);
 
-    vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
-    line->GetPointIds()->SetId(0, pointsCount + i);
-    line->GetPointIds()->SetId(1, pointsCount + i + 1);
-    cells->InsertNextCell(line);
-    cell_types.push_back(VTK_LINE);
+//    vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+//    line->GetPointIds()->SetId(0, pointsCount + i);
+//    line->GetPointIds()->SetId(1, pointsCount + i + 1);
+//    cells->InsertNextCell(line);
+//    cell_types.push_back(VTK_LINE);
 
-    i += NUM_POINTS_PER_LINK;
-  }
+//    i += NUM_POINTS_PER_LINK;
+//  }
 
   // Init traffic array with default 0 traffic value
   vtkSmartPointer<vtkIntArray> traffic = vtkSmartPointer<vtkIntArray>::New();
@@ -532,31 +552,12 @@ StatVTK::outputExodus(const std::string& fileroot,
 
 StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
-  MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), active_(true)
+  MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), vtk_stat_3d_viz_(statParams)
 {
   std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
   this->setStatisticTypeName("StatVTK");
   lastTime_ = 0;
-
-  for (const std::string& it : statParams.getKeys()) {
-      std::cout << "StatVTK: KEY "<< it <<std::endl;
-  }
-  int x_size = statParams.find<int>("x_size", 0);
-  int y_size = statParams.find<int>("y_size", 0);
-  int x_corner = statParams.find<int>("x_corner", 0);
-  int y_corner = statParams.find<int>("y_corner", 0);
-  std::string link_c1 = statParams.find<std::string>("link_c1", "");
-  std::string link_c2 = statParams.find<std::string>("link_c2", "");
-  std::string link_shape = statParams.find<std::string>("link_shape", "");
-  std::cout << "x_size"<< x_size <<std::endl;
-  std::cout << "y_size"<< y_size <<std::endl;
-  std::cout << "x_corner"<< x_corner <<std::endl;
-  std::cout << "y_corner"<< y_corner <<std::endl;
-  vtk_topology_cube_ = vtk_topology_cube(this->getCompName(), x_size, y_size, x_corner, y_corner);
-  std::cout << "link_c1:"<< link_c1 <<std::endl;
-  std::cout << "link_c2:"<< link_c2 <<std::endl;
-  std::cout << "link_shape:"<< link_shape <<std::endl;
-  vtk_link_ = vtk_link(link_c1, link_c2, link_shape);
+  vtk_stat_3d_viz_.setName(this->getCompName());
 }
 
 void
@@ -598,115 +599,9 @@ const std::multimap<uint64_t, traffic_event>& StatVTK::getEvents() const {
   return traffic_event_map_;
 }
 
-vtk_topology_cube StatVTK::getTopology() const {
-  return vtk_topology_cube_;
+Stat3DViz StatVTK::geStat3DViz() const {
+  return vtk_stat_3d_viz_;
 }
-
-vtk_link StatVTK::getLink() const {
-  return vtk_link_;
-}
-
-//void
-//StatVTK::finalize(TimeDelta t)
-//{
-//  if (!active_) return;
-
-//  min_interval_ = 0;
-//  for (int port=0; port < port_states_.size(); ++port){
-//    if (port_states_[port].current_level != 0){
-//      spkt_abort_printf("Port %d on VTK %d did not return to zero", port, id_);
-//    }
-//    auto& port_int = port_states_[port];
-//    //some ports may have collected nothing
-//    if (port_int.last_collection.ticks() != 0){
-//      collect_new_color(t, port, 0);
-//    }
-
-//    if (fabs(port_int.active_vtk_color) > 1e-12){
-//      spkt_abort_printf("Port %d on VTK %d did not return to zero - got %12.8e",
-//                        port, id_, port_int.active_vtk_color);
-//    }
-//  }
-
-//}
-
-//void
-//StatVTK::collect_new_color(TimeDelta time, int port, double color)
-//{
-//  if (!active_ || port >= port_states_.size()) return;
-
-//  port_state& port_int = port_states_[port];
-//  TimeDelta interval_length = time - port_int.pending_collection_start;
-
-//  if (min_interval_.ticks() == 0){
-//    //log all events - no aggregation or averaging
-//    auto pair = sorted_event_list_.emplace(time.ticks(), port, color, id_);
-//    if (!pair.second){
-//      //we got blocked! overwrite their value
-//      auto& e = *pair.first;
-//      e.color_ = color;
-//    }
-//    port_int.active_vtk_color = color;
-//    return;
-//  }
-
-//  double new_color = color;
-//  if (time != port_int.pending_collection_start){ //otherwise this will NaN
-//    double current_state_length = (time - port_int.last_collection).msec();
-//    double accumulated_state_length = (port_int.last_collection - port_int.pending_collection_start).msec();
-//    double total_state_length = (time - port_int.pending_collection_start).msec();
-//    new_color = (port_int.current_color * current_state_length
-//                  + port_int.accumulated_color * accumulated_state_length) / total_state_length;
-//  }
-
-//  if (interval_length >= min_interval_){
-//    //we have previous collections that are now large enough  to commit
-//    if (port_int.pending_collection_start.ticks() == 0){
-//      //we need this to check to avoid having non-zero state accidentally at the beginning
-//      sorted_event_list_.emplace(port_int.last_collection.ticks(),
-//                                 port, new_color, id_);
-//    } else {
-//      sorted_event_list_.emplace(port_int.pending_collection_start.ticks(),
-//                                 port, new_color, id_);
-//    }
-//    port_int.pending_collection_start = port_int.last_collection = time;
-//    port_int.accumulated_color = 0;
-//    port_int.active_vtk_color = new_color;
-//  } else {
-//    port_int.last_collection = time;
-//    port_int.accumulated_color = new_color;
-//  }
-//}
-
-//void
-//StatVTK::collect_new_intensity(TimeDelta time, int port, double intensity)
-//{
-//  if (!active_ || port >= port_states_.size()) return;
-
-//  auto& port_int = port_states_[port];
-//  int level = 0;
-//  for (int i=intensity_levels_.size()-1; i >=0; --i){
-//    if (intensity >= intensity_levels_[i]){
-//      level = i+1;
-//      break;
-//    }
-//  }
-
-//  if (level != port_int.current_level || port_int.active_vtk_color != double(level)){
-//    collect_new_color(time, port, level);
-//    port_int.current_level = level;
-//  }
-//}
-
-
-//void
-//StatVTK::globalReduce(ParallelRuntime *rt)
-//{
-//  if (rt->nproc() > 1){
-//    sprockit::abort("stat_vtk::global_reduce for MPI parallel");
-//  }
-//  //otherwise nothing to do
-//}
 
 }
 }

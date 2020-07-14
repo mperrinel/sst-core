@@ -148,6 +148,7 @@ nobase_dist_sst_HEADERS = \
 	statapi/stathistogram.h \
 	statapi/stataccumulator.h \
 	statapi/statnull.h \
+	statapi/stat3dviz.h \
 	threadsafe.h \
 	cputimer.h \
 	warnmacros.h \
