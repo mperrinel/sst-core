@@ -64,9 +64,11 @@ struct Box3D : Shape3D {
 };
 
 struct Line3D : Shape3D {
-    Line3D(double x_origin, double y_origin, double z_origin,
-           double x_end, double y_end, double z_end) :
-        Shape3D(Shape::Line)
+    Line3D(double x_first, double y_first, double z_first,
+           double x_second, double y_second, double z_second) :
+        Shape3D(Shape::Line),
+        x_first_(x_first), y_first_(y_first), z_first_(z_first),
+        x_second_(x_second), y_second_(y_second), z_second_(z_second)
     {
     }
 
@@ -77,6 +79,13 @@ struct Line3D : Shape3D {
     bool isBox() const override {
         return false;
     }
+
+    double x_first_;
+    double y_first_;
+    double z_first_;
+    double x_second_;
+    double y_second_;
+    double z_second_;
 
 };
 

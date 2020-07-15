@@ -437,6 +437,7 @@ StatVTK::outputExodus(const std::string& fileroot,
       Shape3D *shape = vtkStat3dViz.my_shape_;
       if (vtkStat3dViz.my_shape_->isBox()) {
           if (Box3D * box = dynamic_cast<Box3D *> (shape) ) {
+              // Fill the vtkPoints
               points->SetPoint(0 + i, box->x_origin_, box->y_origin_, box->z_origin_);
               points->SetPoint(1 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_);
               points->SetPoint(2 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_);
@@ -445,50 +446,47 @@ StatVTK::outputExodus(const std::string& fileroot,
               points->SetPoint(5 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_ + box->z_extent_);
               points->SetPoint(6 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
               points->SetPoint(7 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
+
+              // Fill the cells
+              vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
+              for (int j= 0; j< NUM_POINTS_PER_BOX; ++j) {
+                  cell->GetPointIds()->SetId(j, i + j);
+              }
+              cells->InsertNextCell(cell);
+              cell_types.push_back(VTK_HEXAHEDRON);
+
               i += NUM_POINTS_PER_BOX;
           }
           else {
               // TODO: LOG ERROR, shape is box but the dynamic_cast fails ? That shouldn't happen
           }
-      }
+      }    
       else if (vtkStat3dViz.my_shape_->isLine()) {
-          i += NUM_POINTS_PER_LINK;
+          if (Line3D * line = dynamic_cast<Line3D *> (shape) ) {
+              // Fill the vtkPoints
+              points->SetPoint(0 + i, line->x_first_, line->y_first_, line->z_first_);
+              points->SetPoint(1 + i, line->x_second_, line->y_second_, line->z_second_);
+
+              // Fill the cells
+              vtkSmartPointer<vtkLine> cell = vtkSmartPointer<vtkLine>::New();
+              for (int j= 0; j< NUM_POINTS_PER_LINK; ++j) {
+                  cell->GetPointIds()->SetId(j, i + j);
+              }
+              cells->InsertNextCell(cell);
+              cell_types.push_back(VTK_LINE);
+
+              i += NUM_POINTS_PER_LINK;
+          }
+          else {
+              // TODO: LOG ERROR, shape is box but the dynamic_cast fails ? That shouldn't happen
+          }
+      }
+      else  {
+          // TODO: LOG ERROR, shape type unknown ? That shouldn't happen
       }
       compNameToCellIdMap.emplace( vtkStat3dViz.name_, cellId);
       cellId += 1;
   }
-
-  for (int i = 0, j=0; i < vtkStat3dVizSet.size(); ++i, j+=NUM_POINTS_PER_BOX) {
-    vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
-    cell->GetPointIds()->SetId(0, j + 0);
-    cell->GetPointIds()->SetId(1, j + 1);
-    cell->GetPointIds()->SetId(2, j + 2);
-    cell->GetPointIds()->SetId(3, j + 3);
-    cell->GetPointIds()->SetId(4, j + 4);
-    cell->GetPointIds()->SetId(5, j + 5);
-    cell->GetPointIds()->SetId(6, j + 6);
-    cell->GetPointIds()->SetId(7, j + 7);
-    cells->InsertNextCell(cell);
-    cell_types.push_back(VTK_HEXAHEDRON);
-  };
-
-  // LINK.
-//  int pointsCount = vtkTopologyCube.size() * NUM_POINTS_PER_BOX;
-//  i = 0;
-//  for (const auto& link : vtkLink) {
-//    vtk_topology_cube cube1 = *vtkTopologyCube.find(vtk_topology_cube(link.compName1_));
-//    vtk_topology_cube cube2 = *vtkTopologyCube.find(vtk_topology_cube(link.compName2_));
-//    points->SetPoint(pointsCount + i, cube1.x_corner_ + (double) (cube1.x_extent ) /2.0, cube1.y_origin_ + + (double) (cube1.y_extent_) /2.0, 1 + (double ) ( cube1.x_extent ) / 2.0);
-//    points->SetPoint(pointsCount + i + 1, cube2.x_corner_ + (double) (cube2.x_extent ) /2.0, cube2.y_origin_ + + (double) (cube2.y_extent_) /2.0, 1 + (double ) ( cube2.x_extent ) / 2.0);
-
-//    vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
-//    line->GetPointIds()->SetId(0, pointsCount + i);
-//    line->GetPointIds()->SetId(1, pointsCount + i + 1);
-//    cells->InsertNextCell(line);
-//    cell_types.push_back(VTK_LINE);
-
-//    i += NUM_POINTS_PER_LINK;
-//  }
 
   // Init traffic array with default 0 traffic value
   vtkSmartPointer<vtkIntArray> traffic = vtkSmartPointer<vtkIntArray>::New();
