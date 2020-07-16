@@ -101,12 +101,16 @@ struct Stat3DViz {
             double x_extent = params.find<double>("x_extent", "");
             double y_extent = params.find<double>("y_extent", "");
             double z_extent = params.find<double>("z_extent", "");
-            std::cout << " origin : " << x_origin << " "<< y_origin << " "<< z_origin << std::endl;
-            std::cout << " extent : " << x_extent << " "<< y_extent << " "<< z_extent << std::endl;
             my_shape_ = new Box3D(x_origin, y_origin, z_origin, x_extent, y_extent, z_extent);
         }
         else if (shape == lineKey) {
-//            my_shape_ = new Line3D();
+            double x_first = params.find<double>("x_first", "");
+            double y_first = params.find<double>("y_first", "");
+            double z_first = params.find<double>("z_first", "");
+            double x_second = params.find<double>("x_second", "");
+            double y_second = params.find<double>("y_second", "");
+            double z_second = params.find<double>("z_second", "");
+            my_shape_ = new Line3D(x_first, y_first, z_first, x_second, y_second, z_second);
 
         }
         else {

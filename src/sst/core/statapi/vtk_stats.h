@@ -55,14 +55,6 @@ struct VTKStat3DViz : Stat3DViz {
 
 };
 
-//struct compare_vtkstat3dviz {
-//  bool operator()(const VTKStat3DViz& l, const VTKStat3DViz& r){
-//    return l.my_shape_ < r.my_shape_;
-//  }
-//};
-
-
-
 class StatVTK : public MultiStatistic<uint64_t, int, double>
 {
 
@@ -74,21 +66,6 @@ public:
       SST_ELI_ELEMENT_VERSION(1,0,0),
       "Collect intensity at each time point for every component",
       uint64_t,int,double)
-
-  struct display_config {
-    double idle_switch_color;
-    double idle_link_color;
-    double highlight_switch_color;
-    double highlight_link_color;
-    double bidirectional_shift;
-    double min_face_color;
-    double max_face_color_sum;
-    double scale_face_color_sum;
-    double active_face_width;
-    std::string name;
-    std::set<int> special_fills;
-  };
-
 
   StatVTK(BaseComponent* comp, const std::string& statName,
           const std::string& statSubId, Params& statParams);

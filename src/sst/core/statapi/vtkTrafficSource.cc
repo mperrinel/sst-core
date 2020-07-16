@@ -89,11 +89,11 @@ vtkTrafficSource::~vtkTrafficSource()
 
 void vtkTrafficSource::SetNumberOfSteps(double count)
 {
-  this->NumSteps = count;
+  this->NumSteps_ = count;
 }
 void vtkTrafficSource::SetSteps(double *steps)
 {
-  this->Steps = steps;
+  this->Steps_ = steps;
 }
 
 // Topology
@@ -110,31 +110,7 @@ void vtkTrafficSource::SetCells(vtkSmartPointer<vtkCellArray> cells)
 // Traffic
 void vtkTrafficSource::SetTraffics(vtkSmartPointer<vtkIntArray> traffics)
 {
-  this->Traffics = traffics;
-//  //Send traffic to output
-//  this->Traffics = vtkDoubleArray::New();
-//  this->Traffics->SetNumberOfComponents(1);
-//  this->Traffics->SetName(display_cfg_.name.c_str());
-//  this->Traffics->SetNumberOfValues(this->Cells->GetNumberOfCells());
-
-//  for (int i=0; i < num_switches_; ++i){
-//    double intensity = display_cfg_.idle_switch_color;
-//    if (display_cfg_.special_fills.find(i) != display_cfg_.special_fills.end()){
-//      intensity = display_cfg_.highlight_switch_color;
-//    }
-
-//    int cell_start=cell_offsets_[i];
-//    int cell_stop=cell_offsets_[i+1];
-//    this->Traffics->SetValue(cell_start, intensity);
-
-//    for (int c=cell_start+1; c < cell_stop; ++c){
-//      this->Traffics->SetValue(c,0);
-//    }
-//  }
-
-//  for (int i=0; i < num_links_; ++i){
-//    this->Traffics->SetValue(i+link_index_offset_, display_cfg_.idle_link_color);
-//  }
+    this->Traffics = traffics;
 }
 
 //----------------------------------------------------------------------------
@@ -154,8 +130,8 @@ int vtkTrafficSource::RequestInformation(
   //tell the caller that I can provide time varying data and
   //tell it what range of times I can deal with
   double tRange[2];
-  tRange[0] = this->Steps[0];
-  tRange[1] = this->Steps[this->NumSteps-1];
+  tRange[0] = this->Steps_[0];
+  tRange[1] = this->Steps_[this->NumSteps_-1];
   info->Set(
     vtkStreamingDemandDrivenPipeline::TIME_RANGE(),
     tRange,
@@ -166,8 +142,8 @@ int vtkTrafficSource::RequestInformation(
 
   info->Set(
     vtkStreamingDemandDrivenPipeline::TIME_STEPS(),
-    this->Steps,
-    this->NumSteps);
+    this->Steps_,
+    this->NumSteps_);
 
 
   info->Set(CAN_HANDLE_PIECE_REQUEST(), 1);

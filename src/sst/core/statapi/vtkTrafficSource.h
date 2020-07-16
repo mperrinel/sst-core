@@ -88,10 +88,6 @@ public:
   vtkTypeMacro(vtkTrafficSource,vtkUnstructuredGridAlgorithm);
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
-  void SetDisplayParameters(const StatVTK::display_config& cfg){
-//    display_cfg_ = cfg;
-  }
-
   void SetNumberOfSteps(double count);
   void SetSteps(double *steps);
 
@@ -99,31 +95,9 @@ public:
   void SetPoints(vtkSmartPointer<vtkPoints> points);
   void SetCells(vtkSmartPointer<vtkCellArray> cells);
 
-  void SetNumObjects(int num_switches, int num_links,
-                     std::vector<int>&& switch_cell_offsets){
-    link_index_offset_ = switch_cell_offsets.back();
-    num_switches_ = num_switches;
-    num_links_ = num_links;
-//    cell_offsets_ = std::move(switch_cell_offsets);
-  }
-
-//  void SetGeometries(std::vector<Topology::VTKSwitchGeometry>&& vec){
-//    geoms_ = std::move(vec);
-//  }
-
   template <class Vec> //allow move or copy
   void SetCellTypes(Vec&& types){
     CellTypes = std::forward<Vec>(types);
-  }
-
-  template <class Map> //allow move or copy
-  void SetPortLinkMap(Map&& map){
-//    port_to_link_id_ = std::forward<Map>(map);
-  }
-
-  template <class Map>
-  void SetLocalToGlobalLinkMap(Map&& map){
-//    local_to_global_link_id_ = std::forward<Map>(map);
   }
 
   // Traffic
@@ -137,8 +111,6 @@ public:
 
   void SetTraffics(vtkSmartPointer<vtkIntArray> traffics);
 
-//  void SetPaintSwitches(uint64_t paintLength);
-
 protected:
   vtkTrafficSource();
   ~vtkTrafficSource() override;
@@ -151,23 +123,15 @@ protected:
                   vtkInformationVector**,
                   vtkInformationVector*) override;
 
-  int NumSteps;
-  double *Steps;
+  int NumSteps_;
+  double *Steps_;
   std::multimap<uint64_t, traffic_event> traffic_progress_map_;
   std::map<std::string, int> compName_to_cellId_map;
-//  std::unordered_map<uint32_t,int> port_to_link_id_;
-//  std::unordered_map<uint32_t,uint64_t> local_to_global_link_id_;
   vtkSmartPointer<vtkIntArray> Traffics;
   vtkSmartPointer<vtkPoints> Points;
   vtkSmartPointer<vtkCellArray> Cells;
-//  vtkSmartPointer<vtkCellArray> Lines;
   std::vector<int> CellTypes;
-//  std::vector<int> cell_offsets_;
-//  std::vector<Topology::VTKSwitchGeometry> geoms_;
-  int num_switches_;
-  int num_links_;
-  int link_index_offset_;
-//  StatVTK::display_config display_cfg_;
+
 
 
 private:
