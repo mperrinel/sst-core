@@ -49,9 +49,9 @@ struct traffic_event {
 };
 
 
+
 struct VTKStat3DViz : Stat3DViz {
     VTKStat3DViz(Params& params) : Stat3DViz(params){};
-
 
 };
 

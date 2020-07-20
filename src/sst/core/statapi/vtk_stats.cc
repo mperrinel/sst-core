@@ -43,6 +43,7 @@ Questions? Contact sst-macro-help@sandia.gov
 */
 #include "sst/core/statapi/vtk_stats.h"
 #include "sst/core/statapi/vtkTrafficSource.h"
+#include "sst/core/simulation.h"
 
 
 #include "vtkExodusIIWriter.h"
@@ -72,12 +73,22 @@ StatVTK::outputExodus(const std::string& fileroot,
    // Compute the number of the points
   int numberOfPoints = 0;
   for (const auto& vtkStat3dViz : vtkStat3dVizSet) {
-      if (vtkStat3dViz.my_shape_->isBox()) {
-          numberOfPoints += NUM_POINTS_PER_BOX;
+      Shape3D *shape = vtkStat3dViz.my_shape_;
+      switch (vtkStat3dViz.my_shape_->shape) {
+          case Shape3D::Box: {
+              numberOfPoints += NUM_POINTS_PER_BOX;
+              break;
+          }
+          case Shape3D::Line: {
+              numberOfPoints += NUM_POINTS_PER_LINK;
+              break;
+          }
+          default: {
+               Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot compute the number of points: "
+                                                                                      "Unknown Shape3D type detected\n");
+          }
       }
-      else if (vtkStat3dViz.my_shape_->isLine()) {
-          numberOfPoints += NUM_POINTS_PER_LINK;
-      }
+        // TODO: log unrocognized
   }
 
   points->SetNumberOfPoints(numberOfPoints);
@@ -94,8 +105,9 @@ StatVTK::outputExodus(const std::string& fileroot,
   int cellId = 0;
   for (const auto& vtkStat3dViz : vtkStat3dVizSet) {
       Shape3D *shape = vtkStat3dViz.my_shape_;
-      if (vtkStat3dViz.my_shape_->isBox()) {
-          if (Box3D * box = dynamic_cast<Box3D *> (shape) ) {
+      switch (vtkStat3dViz.my_shape_->shape) {
+          case Shape3D::Box: {
+              Box3D * box = static_cast<Box3D*> (shape);
               // Fill the vtkPoints
               points->SetPoint(0 + i, box->x_origin_, box->y_origin_, box->z_origin_);
               points->SetPoint(1 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_);
@@ -115,13 +127,11 @@ StatVTK::outputExodus(const std::string& fileroot,
               cell_types.push_back(VTK_HEXAHEDRON);
 
               i += NUM_POINTS_PER_BOX;
+              break;
+
           }
-          else {
-              // TODO: LOG ERROR, shape is box but the dynamic_cast fails ? That shouldn't happen
-          }
-      }    
-      else if (vtkStat3dViz.my_shape_->isLine()) {
-          if (Line3D * line = dynamic_cast<Line3D *> (shape) ) {
+          case Shape3D::Line: {
+              Line3D * line = static_cast<Line3D*> (shape);
               // Fill the vtkPoints
               points->SetPoint(0 + i, line->x_first_, line->y_first_, line->z_first_);
               points->SetPoint(1 + i, line->x_second_, line->y_second_, line->z_second_);
@@ -135,14 +145,14 @@ StatVTK::outputExodus(const std::string& fileroot,
               cell_types.push_back(VTK_LINE);
 
               i += NUM_POINTS_PER_LINK;
-          }
-          else {
-              // TODO: LOG ERROR, shape is box but the dynamic_cast fails ? That shouldn't happen
-          }
+              break;
+           }
+           default: {
+                Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot display the geometry: "
+                                                                                       "Unknown Shape3D type detected\n");
+           }
       }
-      else  {
-          // TODO: LOG ERROR, shape type unknown ? That shouldn't happen
-      }
+
       compNameToCellIdMap.emplace( vtkStat3dViz.name_, cellId);
       cellId += 1;
   }

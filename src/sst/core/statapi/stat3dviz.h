@@ -14,6 +14,7 @@
 
 #include "sst/core/sst_types.h"
 #include "sst/core/warnmacros.h"
+#include "sst/core/simulation.h"
 
 #include <string>
 
@@ -35,9 +36,6 @@ struct Shape3D {
      shape(s)
    {
    }
-
-   virtual bool isBox() const = 0;
-   virtual bool isLine() const = 0;
 };
 struct Box3D : Shape3D {
     Box3D(double x_origin, double y_origin, double z_origin,
@@ -46,13 +44,6 @@ struct Box3D : Shape3D {
       x_origin_(x_origin), y_origin_(y_origin), z_origin_(z_origin),
       x_extent_(x_extent), y_extent_(y_extent), z_extent_(z_extent)
     {
-    }
-    bool isLine() const override {
-        return false;
-    }
-
-    bool isBox() const override {
-        return true;
     }
 
     double x_origin_;
@@ -70,14 +61,6 @@ struct Line3D : Shape3D {
         x_first_(x_first), y_first_(y_first), z_first_(z_first),
         x_second_(x_second), y_second_(y_second), z_second_(z_second)
     {
-    }
-
-    bool isLine() const override {
-        return true;
-    }
-
-    bool isBox() const override {
-        return false;
     }
 
     double x_first_;
@@ -114,8 +97,8 @@ struct Stat3DViz {
 
         }
         else {
-           // TODO Error : type unrecognized
-           std::cout << " Stat3DViz isn't recognized " <<  std::endl;
+            Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot create a correct Shape3D: "
+                                                                                   "Unknown %s type detected\n", shape.c_str());
         }
     }
 
