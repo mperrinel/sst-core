@@ -90,8 +90,6 @@ void StatisticOutputEXODUS::startOfSimulation()
 
 void StatisticOutputEXODUS::endOfSimulation()
 {
-    std::cout << "StatisticOutputEXODUS::endOfSimulation() "<< std::endl;
-
     this->outputConsole();
     StatVTK::outputExodus(m_FilePath, std::move(m_traffic_progress_map),
                           std::move(m_stat_3d_viz_list_)
@@ -135,19 +133,18 @@ void StatisticOutputEXODUS::outputConsole()
 {
     std::multimap<std::string, std::multimap<uint64_t, int>> tf_nodes_map;
     for (const auto & eventIte : m_traffic_progress_map){
-      auto nodeId = eventIte.second.compName_;
-      auto portId = eventIte.second.port_;
-      auto nodIdPortIdKey = nodeId +":"+ std::to_string(portId);
-      auto resIt = tf_nodes_map.find(nodIdPortIdKey);
-      if(resIt == tf_nodes_map.cend()){
-        auto map = std::multimap<uint64_t, int>{};
-        map.insert({eventIte.first, eventIte.second.color_});
-
-        tf_nodes_map.insert({nodIdPortIdKey, map});
-      } else {
-        auto &map = resIt->second;
-        map.insert({eventIte.first, eventIte.second.color_});
-      }
+        auto nodeId = eventIte.second.compName_;
+        auto portId = eventIte.second.port_;
+        auto nodIdPortIdKey = nodeId +":"+ std::to_string(portId);
+        auto resIt = tf_nodes_map.find(nodIdPortIdKey);
+        if (resIt == tf_nodes_map.cend()) {
+            auto map = std::multimap<uint64_t, int>{};
+            map.insert({eventIte.first, eventIte.second.color_});
+            tf_nodes_map.insert({nodIdPortIdKey, map});
+        } else {
+            auto &map = resIt->second;
+            map.insert({eventIte.first, eventIte.second.color_});
+        }
     }
 
     //  TORM: display the map in the console

@@ -79,7 +79,7 @@ vtkStandardNewMacro(vtkTrafficSource);
 //----------------------------------------------------------------------------
 vtkTrafficSource::vtkTrafficSource()
 {
-  this->SetNumberOfInputPorts(0);
+    this->SetNumberOfInputPorts(0);
 }
 
 //----------------------------------------------------------------------------
@@ -89,22 +89,22 @@ vtkTrafficSource::~vtkTrafficSource()
 
 void vtkTrafficSource::SetNumberOfSteps(double count)
 {
-  this->NumSteps_ = count;
+    this->NumSteps_ = count;
 }
 void vtkTrafficSource::SetSteps(double *steps)
 {
-  this->Steps_ = steps;
+    this->Steps_ = steps;
 }
 
 // Topology
 void vtkTrafficSource::SetPoints(vtkSmartPointer<vtkPoints> points)
 {
-  this->Points = points;
+    this->Points = points;
 }
 
 void vtkTrafficSource::SetCells(vtkSmartPointer<vtkCellArray> cells)
 {
-  this->Cells = cells;
+    this->Cells = cells;
 }
 
 // Traffic
@@ -122,7 +122,7 @@ int vtkTrafficSource::RequestInformation(
 {
   if(!this->Superclass::RequestInformation(reqInfo,inVector,outVector))
   {
-    return 0;
+      return 0;
   }
 
   vtkInformation *info=outVector->GetInformationObject(0);
@@ -158,7 +158,6 @@ int vtkTrafficSource::RequestData(
   vtkInformationVector* outVector
   )
 {
-
   static int timestep = 0;
 
   vtkInformation *outInfo = outVector->GetInformationObject(0);
@@ -166,14 +165,14 @@ int vtkTrafficSource::RequestData(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
   if (!output)
   {
-    return 0;
+      return 0;
   }
 
   uint64_t reqTS(0);
   if (outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
   {
-    double requested = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-    reqTS = llround(requested);
+      double requested = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+      reqTS = llround(requested);
   }
 
   //if analytic compute the value at that time
@@ -185,12 +184,9 @@ int vtkTrafficSource::RequestData(
   auto currentIntensities =  traffic_progress_map_.equal_range(reqTS);
 
   for(auto it = currentIntensities.first; it != currentIntensities.second; ++it){
-    traffic_event& event = it->second;
-
-    //std::cout << "Writing color=" << event.color_ << " on " << event.id_ << " port " << event.port_
-   //           << " at t=" << reqTS << " on step=" << timestep << std::endl;
-    int cell = this->compName_to_cellId_map.find(event.compName_)->second; //
-    this->Traffics->SetValue(cell, event.color_);
+      traffic_event& event = it->second;
+      int cell = this->compName_to_cellId_map.find(event.compName_)->second; //
+      this->Traffics->SetValue(cell, event.color_);
   }
   ++timestep;
 
@@ -206,5 +202,5 @@ int vtkTrafficSource::RequestData(
 //----------------------------------------------------------------------------
 void vtkTrafficSource::PrintSelf(ostream& os, vtkIndent indent)
 {
-  this->Superclass::PrintSelf(os, indent);
+    this->Superclass::PrintSelf(os, indent);
 }

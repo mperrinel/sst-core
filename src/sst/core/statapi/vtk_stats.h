@@ -33,18 +33,18 @@ namespace Statistics {
  *         either intensity or level could be written as the color
 */
 struct traffic_event {
-  uint64_t time_; // progress time
-  int port_;
-  //this is mutable due to the nonsense that is
-  //C++ sets that does not allow modifying items in the set
-  //even after collision
-  mutable double color_;
-  std::string compName_;
+    uint64_t time_; // progress time
+    int port_;
+    //this is mutable due to the nonsense that is
+    //C++ sets that does not allow modifying items in the set
+    //even after collision
+    mutable double color_;
+    std::string compName_;
 
-  traffic_event(uint64_t t, int port, double color, std::string compName) :
+    traffic_event(uint64_t t, int port, double color, std::string compName) :
     time_(t), port_(port), color_(color), compName_(compName)
-  {
-  }
+    {
+    }
 
 };
 
@@ -89,9 +89,9 @@ public:
 private:
   struct compare_events {
     bool operator()(const traffic_event& l, const traffic_event& r){
-      if (l.time_ != r.time_) return l.time_ < r.time_;
-      if (l.compName_ != r.compName_) return l.compName_ < r.compName_;
-      return l.port_ < r.port_;
+        if (l.time_ != r.time_) return l.time_ < r.time_;
+        if (l.compName_ != r.compName_) return l.compName_ < r.compName_;
+        return l.port_ < r.port_;
     }
   };
 

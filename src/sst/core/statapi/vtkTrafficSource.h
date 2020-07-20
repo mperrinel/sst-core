@@ -97,16 +97,16 @@ public:
 
   template <class Vec> //allow move or copy
   void SetCellTypes(Vec&& types){
-    CellTypes = std::forward<Vec>(types);
+      CellTypes = std::forward<Vec>(types);
   }
 
   // Traffic
   void SetTrafficProgressMap(std::multimap<uint64_t, traffic_event>&& trafficProgressMap){
-    traffic_progress_map_ = std::move(trafficProgressMap);
+      traffic_progress_map_ = std::move(trafficProgressMap);
   }
 
   void SetCompNameToCellIdMap(std::map<std::string, int>&& compNameToCellIdMap){
-    compName_to_cellId_map = std::move(compNameToCellIdMap);
+      compName_to_cellId_map = std::move(compNameToCellIdMap);
   }
 
   void SetTraffics(vtkSmartPointer<vtkIntArray> traffics);
@@ -131,8 +131,6 @@ protected:
   vtkSmartPointer<vtkPoints> Points;
   vtkSmartPointer<vtkCellArray> Cells;
   std::vector<int> CellTypes;
-
-
 
 private:
   vtkTrafficSource(const vtkTrafficSource&) = delete;
