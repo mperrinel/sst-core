@@ -49,12 +49,6 @@ struct traffic_event {
 };
 
 
-
-struct VTKStat3DViz : Stat3DViz {
-    VTKStat3DViz(Params& params) : Stat3DViz(params){};
-
-};
-
 class StatVTK : public MultiStatistic<uint64_t, int, double>
 {
 
@@ -84,11 +78,11 @@ public:
   Stat3DViz geStat3DViz() const;
   static void outputExodus(const std::string& fileroot,
         std::multimap<uint64_t, traffic_event>&& traffMap,
-        std::set<Stat3DViz, compare_stat3dviz>&& vtkStat3dVizSet);
+        std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet);
 
 private:
   struct compare_events {
-    bool operator()(const traffic_event& l, const traffic_event& r){
+    bool operator()(const traffic_event& l, const traffic_event& r) {
         if (l.time_ != r.time_) return l.time_ < r.time_;
         if (l.compName_ != r.compName_) return l.compName_ < r.compName_;
         return l.port_ < r.port_;
@@ -99,7 +93,7 @@ private:
 
   uint64_t lastTime_;
   std::multimap<uint64_t, traffic_event> traffic_event_map_;
-  VTKStat3DViz vtk_stat_3d_viz_;
+  Stat3DViz stat_3d_viz_;
 
 };
 

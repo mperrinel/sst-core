@@ -62,7 +62,7 @@ namespace Statistics {
 void
 StatVTK::outputExodus(const std::string& fileroot,
     std::multimap<uint64_t, traffic_event>&& traffMap,
-    std::set<Stat3DViz, compare_stat3dviz>&& vtkStat3dVizSet)
+    std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet)
 {
     static constexpr int NUM_POINTS_PER_BOX = 8;
     static constexpr int NUM_POINTS_PER_LINK = 2;
@@ -72,9 +72,9 @@ StatVTK::outputExodus(const std::string& fileroot,
 
     // Compute the number of the points
     int numberOfPoints = 0;
-    for (const auto& vtkStat3dViz : vtkStat3dVizSet) {
-      Shape3D *shape = vtkStat3dViz.my_shape_;
-      switch (vtkStat3dViz.my_shape_->shape) {
+    for (const auto& stat3dViz : stat3dVizSet) {
+      Shape3D *shape = stat3dViz.my_shape_;
+      switch (stat3dViz.my_shape_->shape) {
       case Shape3D::Box: {
           numberOfPoints += NUM_POINTS_PER_BOX;
           break;
@@ -96,13 +96,13 @@ StatVTK::outputExodus(const std::string& fileroot,
     std::map<std::string, int> compNameToCellIdMap;
 
     std::vector<int> cell_types;
-    cell_types.reserve(vtkStat3dVizSet.size());
+    cell_types.reserve(stat3dVizSet.size());
 
     int i = 0;
     int cellId = 0;
-    for (const auto& vtkStat3dViz : vtkStat3dVizSet) {
-      Shape3D *shape = vtkStat3dViz.my_shape_;
-      switch (vtkStat3dViz.my_shape_->shape) {
+    for (const auto& stat3dViz : stat3dVizSet) {
+      Shape3D *shape = stat3dViz.my_shape_;
+      switch (stat3dViz.my_shape_->shape) {
       case Shape3D::Box: {
           Box3D * box = static_cast<Box3D*> (shape);
           // Fill the vtkPoints
@@ -148,7 +148,7 @@ StatVTK::outputExodus(const std::string& fileroot,
        }
     }
 
-      compNameToCellIdMap.emplace( vtkStat3dViz.name_, cellId);
+      compNameToCellIdMap.emplace( stat3dViz.name_, cellId);
       cellId += 1;
     }
 
@@ -206,12 +206,12 @@ StatVTK::outputExodus(const std::string& fileroot,
 
 StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
-  MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), vtk_stat_3d_viz_(statParams)
+  MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), stat_3d_viz_(statParams)
 {
     std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
     this->setStatisticTypeName("StatVTK");
     lastTime_ = 0;
-    vtk_stat_3d_viz_.setName(this->getCompName());
+    stat_3d_viz_.setName(this->getCompName());
 }
 
 void
@@ -254,7 +254,7 @@ const std::multimap<uint64_t, traffic_event>& StatVTK::getEvents() const {
 }
 
 Stat3DViz StatVTK::geStat3DViz() const {
-    return vtk_stat_3d_viz_;
+    return stat_3d_viz_;
 }
 
 }

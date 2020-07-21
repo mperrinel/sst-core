@@ -120,35 +120,35 @@ int vtkTrafficSource::RequestInformation(
   vtkInformationVector* outVector
   )
 {
-  if(!this->Superclass::RequestInformation(reqInfo,inVector,outVector))
-  {
+    if(!this->Superclass::RequestInformation(reqInfo,inVector,outVector))
+    {
       return 0;
-  }
+    }
 
-  vtkInformation *info=outVector->GetInformationObject(0);
+    vtkInformation *info=outVector->GetInformationObject(0);
 
-  //tell the caller that I can provide time varying data and
-  //tell it what range of times I can deal with
-  double tRange[2];
-  tRange[0] = this->Steps_[0];
-  tRange[1] = this->Steps_[this->NumSteps_-1];
-  info->Set(
+    //tell the caller that I can provide time varying data and
+    //tell it what range of times I can deal with
+    double tRange[2];
+    tRange[0] = this->Steps_[0];
+    tRange[1] = this->Steps_[this->NumSteps_-1];
+    info->Set(
     vtkStreamingDemandDrivenPipeline::TIME_RANGE(),
     tRange,
     2);
 
-  //tell the caller if this filter can provide values ONLY at discrete times
-  //or anywhere within the time range
+    //tell the caller if this filter can provide values ONLY at discrete times
+    //or anywhere within the time range
 
-  info->Set(
+    info->Set(
     vtkStreamingDemandDrivenPipeline::TIME_STEPS(),
     this->Steps_,
     this->NumSteps_);
 
 
-  info->Set(CAN_HANDLE_PIECE_REQUEST(), 1);
+    info->Set(CAN_HANDLE_PIECE_REQUEST(), 1);
 
-  return 1;
+    return 1;
 }
 
 //----------------------------------------------------------------------------
@@ -158,45 +158,45 @@ int vtkTrafficSource::RequestData(
   vtkInformationVector* outVector
   )
 {
-  static int timestep = 0;
+    static int timestep = 0;
 
-  vtkInformation *outInfo = outVector->GetInformationObject(0);
-  vtkUnstructuredGrid *output= vtkUnstructuredGrid::SafeDownCast(
+    vtkInformation *outInfo = outVector->GetInformationObject(0);
+    vtkUnstructuredGrid *output= vtkUnstructuredGrid::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
-  if (!output)
-  {
+    if (!output)
+    {
       return 0;
-  }
+    }
 
-  uint64_t reqTS(0);
-  if (outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
-  {
-      double requested = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-      reqTS = llround(requested);
-  }
+    uint64_t reqTS(0);
+    if (outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
+    {
+        double requested = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+        reqTS = llround(requested);
+    }
 
-  //if analytic compute the value at that time
-  //TODO: check if it's necessary to look up the nearest time and value from the table
-  output->Initialize();
-  output->GetInformation()->Set(vtkDataObject::DATA_TIME_STEP(), reqTS);
+    //if analytic compute the value at that time
+    //TODO: check if it's necessary to look up the nearest time and value from the table
+    output->Initialize();
+    output->GetInformation()->Set(vtkDataObject::DATA_TIME_STEP(), reqTS);
 
-  //Updade and Send traffic to output
-  auto currentIntensities =  traffic_progress_map_.equal_range(reqTS);
+    //Updade and Send traffic to output
+    auto currentIntensities =  traffic_progress_map_.equal_range(reqTS);
 
-  for(auto it = currentIntensities.first; it != currentIntensities.second; ++it){
-      traffic_event& event = it->second;
-      int cell = this->compName_to_cellId_map.find(event.compName_)->second; //
-      this->Traffics->SetValue(cell, event.color_);
-  }
-  ++timestep;
+    for(auto it = currentIntensities.first; it != currentIntensities.second; ++it){
+        traffic_event& event = it->second;
+        int cell = this->compName_to_cellId_map.find(event.compName_)->second; //
+        this->Traffics->SetValue(cell, event.color_);
+    }
+    ++timestep;
 
-  output->GetCellData()->AddArray(this->Traffics);
+    output->GetCellData()->AddArray(this->Traffics);
 
-  // Send Topology to output
-  output->SetPoints(this->Points);
-  output->SetCells(this->CellTypes.data(), this->Cells);
+    // Send Topology to output
+    output->SetPoints(this->Points);
+    output->SetCells(this->CellTypes.data(), this->Cells);
 
-  return 1;
+    return 1;
 }
 
 //----------------------------------------------------------------------------
