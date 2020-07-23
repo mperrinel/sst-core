@@ -40,9 +40,8 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
       }
 
       m_stat_3d_viz_list_.insert(vtkStat->geStat3DViz());
-
-      this->unlock();
     }
+    this->unlock();
 }
 
 bool StatisticOutputEXODUS::checkOutputParameters()

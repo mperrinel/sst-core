@@ -89,12 +89,8 @@ private:
     }
   };
 
-  std::set<traffic_event, compare_events> sorted_event_list_;
-
-  uint64_t lastTime_;
   std::multimap<uint64_t, traffic_event> traffic_event_map_;
   Stat3DViz stat_3d_viz_;
-
 };
 
 }

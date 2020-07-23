@@ -210,7 +210,6 @@ StatVTK::StatVTK(BaseComponent* comp, const std::string& statName,
 {
     std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
     this->setStatisticTypeName("StatVTK");
-    lastTime_ = 0;
     stat_3d_viz_.setName(this->getCompName());
 }
 
@@ -234,7 +233,6 @@ void StatVTK::outputStatisticFields(StatisticFieldsOutput* statOutput, bool UNUS
 void StatVTK::addData_impl(uint64_t time, int port, double intensity) {
 
     // Update the traffic_event_map with the a new traffic event
-    lastTime_ = time;
     auto it = traffic_event_map_.find(time);
     if (it == traffic_event_map_.cend()) {
         traffic_event event(time, port, intensity, this->getCompName());
