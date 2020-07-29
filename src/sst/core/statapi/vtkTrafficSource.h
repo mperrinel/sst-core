@@ -77,7 +77,7 @@ Questions? Contact sst-macro-help@sandia.gov
 #include "vtkIntArray.h"
 #include "vtkPoints.h"
 #include "vtkSmartPointer.h"
-#include "vtk_stats.h"
+#include "statintensity.h"
 
 using namespace SST::Statistics;
 
@@ -101,7 +101,7 @@ public:
   }
 
   // Traffic
-  void SetTrafficProgressMap(std::multimap<uint64_t, traffic_event>&& trafficProgressMap){
+  void SetTrafficProgressMap(std::multimap<uint64_t, intensity_event>&& trafficProgressMap){
       traffic_progress_map_ = std::move(trafficProgressMap);
   }
 
@@ -110,6 +110,12 @@ public:
   }
 
   void SetTraffics(vtkSmartPointer<vtkIntArray> traffics);
+
+
+  static void vtkOutputExodus(const std::string& fileroot,
+        std::multimap<uint64_t, intensity_event>&& traffMap,
+        std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet);
+
 
 protected:
   vtkTrafficSource();
@@ -125,7 +131,7 @@ protected:
 
   int NumSteps_;
   double *Steps_;
-  std::multimap<uint64_t, traffic_event> traffic_progress_map_;
+  std::multimap<uint64_t, intensity_event> traffic_progress_map_;
   std::map<std::string, int> compName_to_cellId_map;
   vtkSmartPointer<vtkIntArray> Traffics;
   vtkSmartPointer<vtkPoints> Points;

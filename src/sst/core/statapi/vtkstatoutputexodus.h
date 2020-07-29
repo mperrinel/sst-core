@@ -9,37 +9,37 @@
 // information, see the LICENSE file in the top level directory of the
 // distribution.
 
-#ifndef _H_SST_CORE_STATISTICS_OUTPUTEXODUS
-#define _H_SST_CORE_STATISTICS_OUTPUTEXODUS
+#ifndef _H_SST_CORE_STATISTICS_VTKOUTPUTEXODUS
+#define _H_SST_CORE_STATISTICS_VTKOUTPUTEXODUS
 
 #include "sst/core/sst_types.h"
 
-#include "sst/core/statapi/statoutput.h"
+#include "sst/core/statapi/statisticoutputexodus.h"
 #include "sst/core/statapi/statintensity.h"
 
 namespace SST {
 namespace Statistics {
 
 /**
-    \class StatisticOutputEXODUS
+    \class VTKStatisticOutputEXODUS
 
-  The class for statistics output to a EXODUS formatted file
+  The class for statistics output to a EXODUS formatted file using VTK
 */
-class StatisticOutputEXODUS : public StatisticOutput
+class VTKStatisticOutputEXODUS : public StatisticOutputEXODUS
 {
 public:
     SST_ELI_REGISTER_DERIVED(
-      StatisticOutput,
       StatisticOutputEXODUS,
+      VTKStatisticOutputEXODUS,
       "sst",
-      "statisticoutputexodus",
+      "vtkstatisticoutputexodus",
       SST_ELI_ELEMENT_VERSION(1,0,0),
-      "writes exodus output");
+      "writes vtk exodus output");
 
     /** Construct a StatOutputEXODUS
      * @param outputParameters - Parameters used for this Statistic Output
      */
-    StatisticOutputEXODUS(Params& outputParameters);
+    VTKStatisticOutputEXODUS(Params& outputParameters);
 
     void output(StatisticBase* statistic, bool endOfSimFlag) override;
 
@@ -78,10 +78,10 @@ private:
 
     void outputConsole();
 
-//    virtual void writeExodus() = 0;
+    virtual void writeExodus() = 0;
 
 protected:
-    StatisticOutputEXODUS() {;} // For serialization
+    VTKStatisticOutputEXODUS() {;} // For serialization
 
 private:
     bool openFile();
@@ -89,10 +89,8 @@ private:
 
 private:
     std::string              m_FilePath;
-//    std::set<intensity_event, compare_events> m_traffic_progress_map;
-    std::multimap<uint64_t, sorted_intensity_event> m_traffic_progress_map;
+    std::set<intensity_event, compare_events> m_traffic_progress_map;
     std::set<Stat3DViz, compare_stat3dviz> m_stat_3d_viz_list_;
-    int statisticId_;
 
 };
 

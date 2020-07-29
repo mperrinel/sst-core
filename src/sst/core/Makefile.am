@@ -144,9 +144,11 @@ nobase_dist_sst_HEADERS = \
 	statapi/statoutputcsv.h \
 	statapi/statoutputjson.h \
 	statapi/statoutputhdf5.h \
+	statapi/statoutputexodus.h \
 	statapi/statbase.h \
 	statapi/stathistogram.h \
 	statapi/stataccumulator.h \
+	statapi/statintensity.h \
 	statapi/statnull.h \
 	statapi/stat3dviz.h \
 	threadsafe.h \
@@ -228,6 +230,8 @@ sst_core_sources = \
 	statapi/statoutputtxt.cc \
 	statapi/statoutputcsv.cc \
 	statapi/statoutputjson.cc \
+	statapi/statoutputexodus.cc \
+	statapi/statintensity.cc \
 	statapi/statbase.cc \
 	cputimer.cc \
 	iouse.cc
@@ -347,13 +351,11 @@ endif
 if HAVE_VTK
 AM_CPPFLAGS += $(VTK_CPPFLAGS)
 sst_core_sources +=  \
-        statapi/statoutputexodus.cc \
-        statapi/vtk_stats.cc \
+        statapi/vtkstatoutputexodus.cc \
         statapi/vtkTrafficSource.cc
 
 nobase_dist_sst_HEADERS += \
-        statapi/statoutputexodus.h \
-        statapi/vtk_stats.h \
+        statapi/vtkstatoutputexodus.h \
         statapi/vtkTrafficSource.h
 sstsim_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)
 sstinfo_x_LDADD += $(VTK_LDFLAGS) $(VTK_LIBS)

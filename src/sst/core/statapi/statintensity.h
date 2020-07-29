@@ -9,8 +9,8 @@
 // information, see the LICENSE file in the top level directory of the
 // distribution.
 
-#ifndef _H_SST_CORE_VTK_STATISTIC_
-#define _H_SST_CORE_VTK_STATISTIC_
+#ifndef _H_SST_CORE_INTENSITY_STATISTIC_
+#define _H_SST_CORE_INTENSITY_STATISTIC_
 
 #include "sst/core/sst_types.h"
 #include "sst/core/warnmacros.h"
@@ -24,46 +24,55 @@ namespace Statistics {
 
 
 /**
- * @brief The traffic_event struct
- * A traffic event contains the collected data through the StatVTK
+ * @brief The intensity_event struct
+ * A intensity_event event contains the collected data through the StatVTK
  * time  = this is the time of the event.
  * port  = this is a the port on which the collection is done
- * color = this is the value (a double) that is written as a VTK state
+ * intensity = this is the value (a double) that is written as a VTK state
  *         at a given timepoint. Depending on configuration,
  *         either intensity or level could be written as the color
 */
-struct traffic_event {
+struct intensity_event {
     uint64_t time_; // progress time
-    int port_;
-    //this is mutable due to the nonsense that is
-    //C++ sets that does not allow modifying items in the set
-    //even after collision
-    mutable double color_;
-    std::string compName_;
-
-    traffic_event(uint64_t t, int port, double color, std::string compName) :
-    time_(t), port_(port), color_(color), compName_(compName)
+    double intensity_;
+    intensity_event(uint64_t t, double intensity) :
+    time_(t), intensity_(intensity)
     {
     }
 
 };
 
+struct sorted_intensity_event {
+  intensity_event ie_;
+  uint64_t id_;
+  sorted_intensity_event(uint64_t id, intensity_event event) :
+  ie_(event), id_(id)
+  {
+  }
+};
 
-class StatVTK : public MultiStatistic<uint64_t, int, double>
+struct compare_intensity_events {
+  bool operator()(const intensity_event& l, const intensity_event& r) {
+      if (l.time_ != r.time_) return l.time_ < r.time_;
+//      if (l.compName_ != r.compName_) return l.compName_ < r.compName_;
+//      return l.port_ < r.port_;
+  }
+};
+
+class IntensityStatistic : public MultiStatistic<uint64_t, int, double>
 {
 
 public:
   SST_ELI_REGISTER_MULTI_STATISTIC(
-      StatVTK,
+      IntensityStatistic,
       "sst",
-      "StatVTK",
+      "IntensityStatistic",
       SST_ELI_ELEMENT_VERSION(1,0,0),
-      "Collect intensity at each time point for every component",
+      "Collect intensity at each time point for a component",
       uint64_t,int,double)
 
-  StatVTK(BaseComponent* comp, const std::string& statName,
+  IntensityStatistic(BaseComponent* comp, const std::string& statName,
           const std::string& statSubId, Params& statParams);
-
 
   void registerOutput(StatisticOutput* statOutput);
 
@@ -74,22 +83,13 @@ public:
 
   void addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) override;
 
-  const std::multimap<uint64_t, traffic_event>& getEvents() const;
+  const std::vector<intensity_event>& getEvents() const;
   Stat3DViz geStat3DViz() const;
-  static void outputExodus(const std::string& fileroot,
-        std::multimap<uint64_t, traffic_event>&& traffMap,
-        std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet);
+
 
 private:
-  struct compare_events {
-    bool operator()(const traffic_event& l, const traffic_event& r) {
-        if (l.time_ != r.time_) return l.time_ < r.time_;
-        if (l.compName_ != r.compName_) return l.compName_ < r.compName_;
-        return l.port_ < r.port_;
-    }
-  };
-
-  std::multimap<uint64_t, traffic_event> traffic_event_map_;
+  std::vector<intensity_event> intensity_event_vector_;
+//  std::multimap<uint64_t, intensity_event> intensity_event_map_;
   Stat3DViz stat_3d_viz_;
 };
 
