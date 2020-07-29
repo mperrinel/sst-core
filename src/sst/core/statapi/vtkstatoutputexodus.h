@@ -14,7 +14,7 @@
 
 #include "sst/core/sst_types.h"
 
-#include "sst/core/statapi/statisticoutputexodus.h"
+#include "sst/core/statapi/statoutputexodus.h"
 #include "sst/core/statapi/statintensity.h"
 
 namespace SST {
@@ -41,44 +41,7 @@ public:
      */
     VTKStatisticOutputEXODUS(Params& outputParameters);
 
-    void output(StatisticBase* statistic, bool endOfSimFlag) override;
-
-    void outputExodus(const std::string& fileroot);
-
-    /** True if this StatOutput can handle StatisticGroups */
-    virtual bool acceptsGroups() const { return true; }
-
-protected:
-    /** Perform a check of provided parameters
-     * @return True if all required parameters and options are acceptable
-     */
-    bool checkOutputParameters() override;
-
-    /** Print out usage for this Statistic Output */
-    void printUsage() override;
-
-    /** Indicate to Statistic Output that simulation started.
-     *  Statistic output may perform any startup code here as necessary.
-     */
-    void startOfSimulation() override;
-
-    /** Indicate to Statistic Output that simulation ended.
-     *  Statistic output may perform any shutdown code here as necessary.
-     */
-    void endOfSimulation() override;
-
-private:
-    void registerStatistic(StatisticBase *stat) override;
-
-    void startOutputGroup(StatisticGroup* group) override;
-    void stopOutputGroup() override;
-
-    void startRegisterGroup(StatisticGroup* group) override;
-    void stopRegisterGroup();
-
-    void outputConsole();
-
-    virtual void writeExodus() = 0;
+    void writeExodus() override;
 
 protected:
     VTKStatisticOutputEXODUS() {;} // For serialization
@@ -86,12 +49,6 @@ protected:
 private:
     bool openFile();
     void closeFile();
-
-private:
-    std::string              m_FilePath;
-    std::set<intensity_event, compare_events> m_traffic_progress_map;
-    std::set<Stat3DViz, compare_stat3dviz> m_stat_3d_viz_list_;
-
 };
 
 } //namespace Statistics

@@ -28,22 +28,12 @@ namespace Statistics {
 class StatisticOutputEXODUS : public StatisticOutput
 {
 public:
-    SST_ELI_REGISTER_DERIVED(
-      StatisticOutput,
-      StatisticOutputEXODUS,
-      "sst",
-      "statisticoutputexodus",
-      SST_ELI_ELEMENT_VERSION(1,0,0),
-      "writes exodus output");
-
     /** Construct a StatOutputEXODUS
      * @param outputParameters - Parameters used for this Statistic Output
      */
     StatisticOutputEXODUS(Params& outputParameters);
 
     void output(StatisticBase* statistic, bool endOfSimFlag) override;
-
-    void outputExodus(const std::string& fileroot);
 
     /** True if this StatOutput can handle StatisticGroups */
     virtual bool acceptsGroups() const { return true; }
@@ -78,7 +68,7 @@ private:
 
     void outputConsole();
 
-//    virtual void writeExodus() = 0;
+    virtual void writeExodus() = 0;
 
 protected:
     StatisticOutputEXODUS() {;} // For serialization
@@ -87,7 +77,7 @@ private:
     bool openFile();
     void closeFile();
 
-private:
+protected:
     std::string              m_FilePath;
 //    std::set<intensity_event, compare_events> m_traffic_progress_map;
     std::multimap<uint64_t, sorted_intensity_event> m_traffic_progress_map;

@@ -101,19 +101,19 @@ public:
   }
 
   // Traffic
-  void SetTrafficProgressMap(std::multimap<uint64_t, intensity_event>&& trafficProgressMap){
+  void SetTrafficProgressMap(std::multimap<uint64_t, sorted_intensity_event>&& trafficProgressMap){
       traffic_progress_map_ = std::move(trafficProgressMap);
   }
 
-  void SetCompNameToCellIdMap(std::map<std::string, int>&& compNameToCellIdMap){
-      compName_to_cellId_map = std::move(compNameToCellIdMap);
+  void SetStatIdToCellIdMap(std::map<uint64_t, int>&& statIdToCellIdMap){
+      statId_to_cellId_map = std::move(statIdToCellIdMap);
   }
 
   void SetTraffics(vtkSmartPointer<vtkIntArray> traffics);
 
 
   static void vtkOutputExodus(const std::string& fileroot,
-        std::multimap<uint64_t, intensity_event>&& traffMap,
+        std::multimap<uint64_t, sorted_intensity_event>&& traffMap,
         std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet);
 
 
@@ -131,8 +131,8 @@ protected:
 
   int NumSteps_;
   double *Steps_;
-  std::multimap<uint64_t, intensity_event> traffic_progress_map_;
-  std::map<std::string, int> compName_to_cellId_map;
+  std::multimap<uint64_t, sorted_intensity_event> traffic_progress_map_;
+  std::map<uint64_t, int> statId_to_cellId_map;
   vtkSmartPointer<vtkIntArray> Traffics;
   vtkSmartPointer<vtkPoints> Points;
   vtkSmartPointer<vtkCellArray> Cells;

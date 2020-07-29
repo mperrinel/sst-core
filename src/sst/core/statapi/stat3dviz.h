@@ -102,11 +102,11 @@ struct Stat3DViz {
         }
     }
 
-    void setName(std::string name) {
-        name_ = name;
+    void setId(uint64_t id) {
+        id_ = id;
     }
 
-    std::string name_;
+    uint64_t id_;
     Shape3D* my_shape_;
 };
 

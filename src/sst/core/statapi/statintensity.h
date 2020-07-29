@@ -25,10 +25,10 @@ namespace Statistics {
 
 /**
  * @brief The intensity_event struct
- * A intensity_event event contains the collected data through the StatVTK
+ * A intensity_event event contains the collected data through the IntensityStatistic
  * time  = this is the time of the event.
  * port  = this is a the port on which the collection is done
- * intensity = this is the value (a double) that is written as a VTK state
+ * intensity = this is the value (a double) that is written
  *         at a given timepoint. Depending on configuration,
  *         either intensity or level could be written as the color
 */

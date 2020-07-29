@@ -43,11 +43,6 @@
 #include "sst/core/statapi/statnull.h"
 #include "sst/core/statapi/statuniquecount.h"
 
-#ifdef HAVE_VTK
-//#include "sst/core/statapi/statoutputexodus.h"
-//#include "sst/core/statapi/vtk_stats.h"
-#endif
-
 using namespace SST::Statistics;
 
 namespace SST {

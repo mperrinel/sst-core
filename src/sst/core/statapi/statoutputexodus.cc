@@ -34,16 +34,18 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
     this->lock();
 
     if(endOfSimFlag) {
-      IntensityStatistic* vtkStat = dynamic_cast<IntensityStatistic *>(statistic);
-      for (auto eventIte : vtkStat->getEvents()) {
-         // creation of the sorted event
-        sorted_intensity_event event(statisticId_, eventIte);
-         // creating a cell id here
-        m_traffic_progress_map.emplace(eventIte.time_, event);
-      }
-      this->statisticId_ = this->statisticId_ + 1;
+        IntensityStatistic* intensityStat = dynamic_cast<IntensityStatistic *>(statistic);
+        for (auto eventIte : intensityStat->getEvents()) {
+             // creation of the sorted event
+            sorted_intensity_event event(this->statisticId_, eventIte);
+             // creating a cell id here
+            m_traffic_progress_map.emplace(eventIte.time_, event);
+        }
+        auto stat3dViz = intensityStat->geStat3DViz();
+        stat3dViz.setId(this->statisticId_);
+        m_stat_3d_viz_list_.insert(stat3dViz);
 
-      m_stat_3d_viz_list_.insert(vtkStat->geStat3DViz());
+        this->statisticId_ = this->statisticId_ + 1;
     }
     this->unlock();
 }
@@ -61,7 +63,7 @@ bool StatisticOutputEXODUS::checkOutputParameters()
     }
 
     // Get the parameters
-    m_FilePath = getOutputParameters().find<std::string>("filepath", "./vtkStatisticOutput.e");
+    m_FilePath = getOutputParameters().find<std::string>("filepath", "./statisticOutput.e");
 
 
     if (0 == m_FilePath.length()) {
@@ -94,9 +96,7 @@ void StatisticOutputEXODUS::startOfSimulation()
 void StatisticOutputEXODUS::endOfSimulation()
 {
     this->outputConsole();
-
-//    this->writeExodus(m_FilePath, std::move(m_traffic_progress_map),
-//                      std::move(m_stat_3d_viz_list_));
+    this->writeExodus();
 
     // Close the file
     closeFile();
@@ -160,14 +160,6 @@ void StatisticOutputEXODUS::outputConsole()
     }
 
 }
-
-
-void StatisticOutputEXODUS::outputExodus(const std::string& fileroot)
-{
-  // Check if that should be better to fill the exodus file here using VTK or to keep
-  // the current behavior on IntensityStatistic class.
-}
-
 
 } //namespace Statistics
 } //namespace SST

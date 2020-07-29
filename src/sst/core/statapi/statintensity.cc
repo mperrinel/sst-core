@@ -50,9 +50,8 @@ IntensityStatistic::IntensityStatistic(BaseComponent* comp, const std::string& s
                  const std::string& statSubId, Params& statParams) :
   MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), stat_3d_viz_(statParams)
 {
-    std::cout<<"StatVTK::StatVTK "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
-    this->setStatisticTypeName("StatVTK");
-    stat_3d_viz_.setName(this->getCompName());
+    std::cout<<"IntensityStatistic::IntensityStatistic "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
+    this->setStatisticTypeName("IntensityStatistic");
 }
 
 void

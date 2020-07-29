@@ -197,9 +197,9 @@ int vtkTrafficSource::RequestData(
     auto currentIntensities =  traffic_progress_map_.equal_range(reqTS);
 
     for(auto it = currentIntensities.first; it != currentIntensities.second; ++it){
-        intensity_event& event = it->second;
-        int cell = this->compName_to_cellId_map.find(event.compName_)->second; //
-        this->Traffics->SetValue(cell, event.color_);
+        auto& event = it->second;
+        int cell = this->statId_to_cellId_map.find(event.id_)->second; //
+        this->Traffics->SetValue(cell, event.ie_.intensity_);
     }
     ++timestep;
 
@@ -218,9 +218,8 @@ void vtkTrafficSource::PrintSelf(ostream& os, vtkIndent indent)
     this->Superclass::PrintSelf(os, indent);
 }
 
-void
-vtkTrafficSource::outputExodus(const std::string& fileroot,
-    std::multimap<uint64_t, intensity_event>&& traffMap,
+void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
+    std::multimap<uint64_t, sorted_intensity_event>&& traffMap,
     std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet)
 {
     static constexpr int NUM_POINTS_PER_BOX = 8;
@@ -252,7 +251,7 @@ vtkTrafficSource::outputExodus(const std::string& fileroot,
 
     // Create the vtkCellArray
     vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
-    std::map<std::string, int> compNameToCellIdMap;
+    std::map<uint64_t, int> statIdToCellIdMap;
 
     std::vector<int> cell_types;
     cell_types.reserve(stat3dVizSet.size());
@@ -307,7 +306,7 @@ vtkTrafficSource::outputExodus(const std::string& fileroot,
        }
     }
 
-      compNameToCellIdMap.emplace( stat3dViz.name_, cellId);
+      statIdToCellIdMap.emplace( stat3dViz.id_, cellId);
       cellId += 1;
     }
 
@@ -342,7 +341,7 @@ vtkTrafficSource::outputExodus(const std::string& fileroot,
     }
 
     vtkSmartPointer<vtkTrafficSource> trafficSource = vtkSmartPointer<vtkTrafficSource>::New();
-    trafficSource->SetCompNameToCellIdMap(std::move(compNameToCellIdMap));
+    trafficSource->SetStatIdToCellIdMap(std::move(statIdToCellIdMap));
     trafficSource->SetTrafficProgressMap(std::move(traffMap));
     trafficSource->SetTraffics(traffic);
     trafficSource->SetPoints(points);
