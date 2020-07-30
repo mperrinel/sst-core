@@ -35,17 +35,23 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
 
     if(endOfSimFlag) {
         IntensityStatistic* intensityStat = dynamic_cast<IntensityStatistic *>(statistic);
-        for (auto eventIte : intensityStat->getEvents()) {
-             // creation of the sorted event
-            sorted_intensity_event event(this->statisticId_, eventIte);
-             // creating a cell id here
-            m_traffic_progress_map.emplace(eventIte.time_, event);
-        }
-        auto stat3dViz = intensityStat->geStat3DViz();
-        stat3dViz.setId(this->statisticId_);
-        m_stat_3d_viz_list_.insert(stat3dViz);
+        if (intensityStat) {
+            for (auto eventIte : intensityStat->getEvents()) {
+                 // creation of the sorted event
+                sorted_intensity_event event(this->statisticId_, eventIte);
+                 // creating a cell id here
+                m_traffic_progress_map.emplace(eventIte.time_, event);
+            }
+            auto stat3dViz = intensityStat->geStat3DViz();
+            stat3dViz.setId(this->statisticId_);
+            m_stat_3d_viz_list_.insert(stat3dViz);
 
-        this->statisticId_ = this->statisticId_ + 1;
+            this->statisticId_ = this->statisticId_ + 1;
+        }
+        else {
+            Output out = Simulation::getSimulation()->getSimulationOutput();
+            out.verbose(CALL_INFO, 1, 0, " : StatisticOutputEXODUS - The ouput won't be produced : the statistic type is not of type  IntensityStatistic\n");
+        }
     }
     this->unlock();
 }
