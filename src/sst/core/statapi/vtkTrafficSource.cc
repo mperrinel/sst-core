@@ -198,8 +198,7 @@ int vtkTrafficSource::RequestData(
 
     for(auto it = currentIntensities.first; it != currentIntensities.second; ++it){
         auto& event = it->second;
-        int cell = this->statId_to_cellId_map.find(event.id_)->second; //
-        this->Traffics->SetValue(cell, event.ie_.intensity_);
+        this->Traffics->SetValue(event.id_, event.ie_.intensity_);
     }
     ++timestep;
 
@@ -251,7 +250,6 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
 
     // Create the vtkCellArray
     vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
-    std::map<uint64_t, int> statIdToCellIdMap;
 
     std::vector<int> cell_types;
     cell_types.reserve(stat3dVizSet.size());
@@ -259,55 +257,53 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
     int i = 0;
     int cellId = 0;
     for (const auto& stat3dViz : stat3dVizSet) {
-      Shape3D *shape = stat3dViz.my_shape_;
-      switch (stat3dViz.my_shape_->shape) {
-      case Shape3D::Box: {
-          Box3D * box = static_cast<Box3D*> (shape);
-          // Fill the vtkPoints
-          points->SetPoint(0 + i, box->x_origin_, box->y_origin_, box->z_origin_);
-          points->SetPoint(1 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_);
-          points->SetPoint(2 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_);
-          points->SetPoint(3 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_);
-          points->SetPoint(4 + i, box->x_origin_, box->y_origin_, box->z_origin_ + box->z_extent_);
-          points->SetPoint(5 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_ + box->z_extent_);
-          points->SetPoint(6 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
-          points->SetPoint(7 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
+        Shape3D *shape = stat3dViz.my_shape_;
+        switch (stat3dViz.my_shape_->shape) {
+        case Shape3D::Box: {
+            Box3D * box = static_cast<Box3D*> (shape);
+            // Fill the vtkPoints
+            points->SetPoint(0 + i, box->x_origin_, box->y_origin_, box->z_origin_);
+            points->SetPoint(1 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_);
+            points->SetPoint(2 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_);
+            points->SetPoint(3 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_);
+            points->SetPoint(4 + i, box->x_origin_, box->y_origin_, box->z_origin_ + box->z_extent_);
+            points->SetPoint(5 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_ + box->z_extent_);
+            points->SetPoint(6 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
+            points->SetPoint(7 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
 
-          // Fill the vtkCellArray
-          vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
-          for (int j= 0; j< NUM_POINTS_PER_BOX; ++j) {
-              cell->GetPointIds()->SetId(j, i + j);
-          }
-          cells->InsertNextCell(cell);
-          cell_types.push_back(VTK_HEXAHEDRON);
+            // Fill the vtkCellArray
+            vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
+            for (int j= 0; j< NUM_POINTS_PER_BOX; ++j) {
+                cell->GetPointIds()->SetId(j, i + j);
+            }
+            cells->InsertNextCell(cell);
+            cell_types.push_back(VTK_HEXAHEDRON);
 
-          i += NUM_POINTS_PER_BOX;
-          break;
-      }
-      case Shape3D::Line: {
-          Line3D * line = static_cast<Line3D*> (shape);
-          // Fill the vtkPoints
-          points->SetPoint(0 + i, line->x_first_, line->y_first_, line->z_first_);
-          points->SetPoint(1 + i, line->x_second_, line->y_second_, line->z_second_);
+            i += NUM_POINTS_PER_BOX;
+            break;
+        }
+        case Shape3D::Line: {
+            Line3D * line = static_cast<Line3D*> (shape);
+            // Fill the vtkPoints
+            points->SetPoint(0 + i, line->x_first_, line->y_first_, line->z_first_);
+            points->SetPoint(1 + i, line->x_second_, line->y_second_, line->z_second_);
 
-          // Fill the cells
-          vtkSmartPointer<vtkLine> cell = vtkSmartPointer<vtkLine>::New();
-          for (int j= 0; j< NUM_POINTS_PER_LINK; ++j) {
-              cell->GetPointIds()->SetId(j, i + j);
-          }
-          cells->InsertNextCell(cell);
-          cell_types.push_back(VTK_LINE);
+            // Fill the cells
+            vtkSmartPointer<vtkLine> cell = vtkSmartPointer<vtkLine>::New();
+            for (int j= 0; j< NUM_POINTS_PER_LINK; ++j) {
+                cell->GetPointIds()->SetId(j, i + j);
+            }
+            cells->InsertNextCell(cell);
+            cell_types.push_back(VTK_LINE);
 
-          i += NUM_POINTS_PER_LINK;
-          break;
-       }
-       default: {
+            i += NUM_POINTS_PER_LINK;
+            break;
+         }
+        default: {
             SST::Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot display the geometry: "                                                                                   "Unknown Shape3D type detected\n");
-       }
-    }
-
-      statIdToCellIdMap.emplace( stat3dViz.id_, cellId);
-      cellId += 1;
+        }
+        }
+        cellId += 1;
     }
 
     // Init traffic array with default 0 traffic value
@@ -341,7 +337,6 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
     }
 
     vtkSmartPointer<vtkTrafficSource> trafficSource = vtkSmartPointer<vtkTrafficSource>::New();
-    trafficSource->SetStatIdToCellIdMap(std::move(statIdToCellIdMap));
     trafficSource->SetTrafficProgressMap(std::move(traffMap));
     trafficSource->SetTraffics(traffic);
     trafficSource->SetPoints(points);

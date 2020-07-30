@@ -105,10 +105,6 @@ public:
       traffic_progress_map_ = std::move(trafficProgressMap);
   }
 
-  void SetStatIdToCellIdMap(std::map<uint64_t, int>&& statIdToCellIdMap){
-      statId_to_cellId_map = std::move(statIdToCellIdMap);
-  }
-
   void SetTraffics(vtkSmartPointer<vtkIntArray> traffics);
 
 
@@ -132,7 +128,6 @@ protected:
   int NumSteps_;
   double *Steps_;
   std::multimap<uint64_t, sorted_intensity_event> traffic_progress_map_;
-  std::map<uint64_t, int> statId_to_cellId_map;
   vtkSmartPointer<vtkIntArray> Traffics;
   vtkSmartPointer<vtkPoints> Points;
   vtkSmartPointer<vtkCellArray> Cells;
