@@ -48,7 +48,7 @@ namespace Statistics {
 
 IntensityStatistic::IntensityStatistic(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
-  MultiStatistic<uint64_t, int, double>(comp, statName, statSubId, statParams), stat_3d_viz_(statParams)
+  MultiStatistic<uint64_t, double>(comp, statName, statSubId, statParams), stat_3d_viz_(statParams)
 {
     std::cout<<"IntensityStatistic::IntensityStatistic "<<" "<<statName<< " "<<statSubId << this->getCompName() <<std::endl;
     this->setStatisticTypeName("IntensityStatistic");
@@ -71,13 +71,13 @@ void IntensityStatistic::outputStatisticFields(StatisticFieldsOutput* statOutput
 
 }
 
-void IntensityStatistic::addData_impl(uint64_t time, int port, double intensity) {
+void IntensityStatistic::addData_impl(uint64_t time, double intensity) {
     // Create a new intensity_event with the a new traffic event
     intensity_event event(time, intensity);
     intensity_event_vector_.push_back(std::move(event));
 }
 
-void IntensityStatistic::addData_impl_Ntimes(uint64_t N, uint64_t time, int port, double intensity) {
+void IntensityStatistic::addData_impl_Ntimes(uint64_t N, uint64_t time, double intensity) {
 
 }
 
