@@ -37,9 +37,8 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
         IntensityStatistic* intensityStat = dynamic_cast<IntensityStatistic *>(statistic);
         if (intensityStat) {
             for (auto eventIte : intensityStat->getEvents()) {
-                 // creation of the sorted event
+                 // creation of the sorted event with the StatisticId
                 sorted_intensity_event event(this->statisticId_, eventIte);
-                 // creating a cell id here
                 m_traffic_progress_map.emplace(eventIte.time_, event);
             }
             auto stat3dViz = intensityStat->geStat3DViz();
