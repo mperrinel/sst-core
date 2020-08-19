@@ -78,7 +78,7 @@ private:
 protected:
     std::string              m_FilePath;
     std::multimap<uint64_t, sorted_intensity_event> m_traffic_progress_map;
-    std::set<Stat3DViz, compare_stat3dviz> m_stat_3d_viz_list_;
+    std::vector<Stat3DViz> m_stat_3d_viz_vector_;
     int statisticId_;
 
 };

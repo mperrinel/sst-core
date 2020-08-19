@@ -110,7 +110,7 @@ public:
 
   static void vtkOutputExodus(const std::string& fileroot,
         std::multimap<uint64_t, sorted_intensity_event>&& traffMap,
-        std::set<Stat3DViz, compare_stat3dviz>&& stat3dVizSet);
+        std::vector<Stat3DViz>&& stat3dVizVector);
 
 
 protected:
