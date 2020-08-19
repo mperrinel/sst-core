@@ -73,7 +73,7 @@ void IntensityStatistic::outputStatisticFields(StatisticFieldsOutput* statOutput
 void IntensityStatistic::addData_impl(uint64_t time, double intensity) {
     // Create a new intensity_event with the a new traffic event
     intensity_event event(time, intensity);
-    intensity_event_vector_.push_back(std::move(event));
+    intensity_event_vector_.emplace_back(event);
 }
 
 void IntensityStatistic::addData_impl_Ntimes(uint64_t N, uint64_t time, double intensity) {
