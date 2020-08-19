@@ -29,7 +29,6 @@ StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
 
 }
 
-
 void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) {
     this->lock();
 
@@ -43,7 +42,7 @@ void StatisticOutputEXODUS::output(StatisticBase* statistic, bool endOfSimFlag) 
             }
             auto stat3dViz = intensityStat->geStat3DViz();
             stat3dViz.setId(this->statisticId_);
-            m_stat_3d_viz_list_.insert(stat3dViz);
+            m_stat_3d_viz_vector_.emplace_back(stat3dViz);
 
             this->statisticId_ = this->statisticId_ + 1;
         }

@@ -33,7 +33,7 @@ VTKStatisticOutputEXODUS::VTKStatisticOutputEXODUS(Params& outputParameters)
 void VTKStatisticOutputEXODUS::writeExodus() {
 
     vtkTrafficSource::vtkOutputExodus(m_FilePath, std::move(m_traffic_progress_map),
-                          std::move(m_stat_3d_viz_list_)
+                          std::move(m_stat_3d_viz_vector_)
                           );
 }
 

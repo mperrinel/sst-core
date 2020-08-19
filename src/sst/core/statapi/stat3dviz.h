@@ -97,13 +97,6 @@ struct Stat3DViz {
     Shape3D* my_shape_;
 };
 
-struct compare_stat3dviz {
-  bool operator()(const Stat3DViz& l, const Stat3DViz& r){
-    return l.my_shape_ < r.my_shape_;
-  }
-};
-
-
 }
 }
 
