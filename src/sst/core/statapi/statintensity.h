@@ -25,7 +25,9 @@ namespace Statistics {
 
 /**
  * @brief The intensity_event struct
- * A intensity_event event contains the collected data through the IntensityStatistic
+ * An intensity_event event contains the collected data through the IntensityStatistic.
+ * An intensity_event should only ever be pushed back on a vector or list.
+ * It is not meant to be comparable and used in a map or set. It is also local to a single statistic.
  * time  = this is the time of the event.
  * intensity = this is the value (a double) that is written
  *         at a given timepoint. Depending on configuration,
@@ -38,14 +40,22 @@ struct intensity_event {
     time_(t), intensity_(intensity)
     {
     }
-
 };
 
+/**
+ * @brief The sorted_intensity_event struct
+ * A sorted_intensity_event event contains an intensity_event and its stat ID.
+ * A sorted_intensity_event can be sorted by time.
+ * It also contains a unique stat ID to distinguish events from different statistic collectors.
+ * statId_  = the unique stat ID.
+ * ie_ = the intensity_event,
+ *
+ */
 struct sorted_intensity_event {
   intensity_event ie_;
-  uint64_t id_;
-  sorted_intensity_event(uint64_t id, intensity_event event) :
-  ie_(event), id_(id)
+  uint64_t statId_;
+  sorted_intensity_event(uint64_t statId, intensity_event event) :
+  ie_(event), statId_(statId)
   {
   }
 };
