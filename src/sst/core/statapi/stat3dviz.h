@@ -38,65 +38,53 @@ struct Shape3D {
    }
 };
 struct Box3D : Shape3D {
-    Box3D(double x_origin, double y_origin, double z_origin,
-          double x_extent, double y_extent, double z_extent) :
+    Box3D(std::vector<double> origin, std::vector<double> size) :
       Shape3D(Shape::Box),
-      x_origin_(x_origin), y_origin_(y_origin), z_origin_(z_origin),
-      x_extent_(x_extent), y_extent_(y_extent), z_extent_(z_extent)
+      origin_(origin), size_(size)
     {
     }
 
-    double x_origin_;
-    double y_origin_;
-    double z_origin_;
-    double x_extent_;
-    double y_extent_;
-    double z_extent_;
+    std::vector<double> origin_;
+    std::vector<double> size_;
 };
 
 struct Line3D : Shape3D {
-    Line3D(double x_first, double y_first, double z_first,
-           double x_second, double y_second, double z_second) :
+    Line3D(std::vector<double> origin, std::vector<double> size) :
         Shape3D(Shape::Line),
-        x_first_(x_first), y_first_(y_first), z_first_(z_first),
-        x_second_(x_second), y_second_(y_second), z_second_(z_second)
+        origin_(origin), size_(size)
     {
     }
 
-    double x_first_;
-    double y_first_;
-    double z_first_;
-    double x_second_;
-    double y_second_;
-    double z_second_;
-
+    std::vector<double> origin_;
+    std::vector<double> size_;
 };
 
 struct Stat3DViz {
 
     Stat3DViz(Params& params){
+        std::vector<double> origin;
+        if (params.contains("origin")){
+            params.find_array("origin", origin);
+        } else {
+            Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot create a Shape3D with no origin");
+        }
+
+        std::vector<double> size;
+        if (params.contains("size")){
+            params.find_array("size", size);
+        } else {
+            Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot create a Shape3D with no size");
+        }
+
         std::string shape = params.find<std::string>("shape", "");
         if (shape == cubeKey) {
-            double x_origin = params.find<double>("x_origin", "");
-            double y_origin = params.find<double>("y_origin", "");
-            double z_origin = params.find<double>("z_origin", "");
-            double x_extent = params.find<double>("x_extent", "");
-            double y_extent = params.find<double>("y_extent", "");
-            double z_extent = params.find<double>("z_extent", "");
-            my_shape_ = new Box3D(x_origin, y_origin, z_origin, x_extent, y_extent, z_extent);
+            my_shape_ = new Box3D(origin, size);
         }
         else if (shape == lineKey) {
-            double x_first = params.find<double>("x_first", "");
-            double y_first = params.find<double>("y_first", "");
-            double z_first = params.find<double>("z_first", "");
-            double x_second = params.find<double>("x_second", "");
-            double y_second = params.find<double>("y_second", "");
-            double z_second = params.find<double>("z_second", "");
-            my_shape_ = new Line3D(x_first, y_first, z_first, x_second, y_second, z_second);
-
+            my_shape_ = new Line3D(origin, size);
         }
         else {
-            Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot create a correct Shape3D: "
+            Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1, "Cannot create a Shape3D: "
                                                                                    "Unknown %s type detected\n", shape.c_str());
         }
     }
