@@ -262,14 +262,14 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
         case Shape3D::Box: {
             Box3D * box = static_cast<Box3D*> (shape);
             // Fill the vtkPoints
-            points->SetPoint(0 + i, box->x_origin_, box->y_origin_, box->z_origin_);
-            points->SetPoint(1 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_);
-            points->SetPoint(2 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_);
-            points->SetPoint(3 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_);
-            points->SetPoint(4 + i, box->x_origin_, box->y_origin_, box->z_origin_ + box->z_extent_);
-            points->SetPoint(5 + i, box->x_origin_ + box->x_extent_, box->y_origin_, box->z_origin_ + box->z_extent_);
-            points->SetPoint(6 + i, box->x_origin_ + box->x_extent_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
-            points->SetPoint(7 + i, box->x_origin_, box->y_origin_ + box->y_extent_, box->z_origin_ + box->z_extent_);
+            points->SetPoint(0 + i, box->origin_[0], box->origin_[1], box->origin_[2]);
+            points->SetPoint(1 + i, box->origin_[0] + box->size_[0], box->origin_[1], box->origin_[2]);
+            points->SetPoint(2 + i, box->origin_[0] + box->size_[0], box->origin_[1] + box->size_[1], box->origin_[2]);
+            points->SetPoint(3 + i, box->origin_[0], box->origin_[1] + box->size_[1], box->origin_[2]);
+            points->SetPoint(4 + i, box->origin_[0], box->origin_[1], box->origin_[2] + box->size_[2]);
+            points->SetPoint(5 + i, box->origin_[0] + box->size_[0], box->origin_[1], box->origin_[2] + box->size_[2]);
+            points->SetPoint(6 + i, box->origin_[0] + box->size_[0], box->origin_[1] + box->size_[1], box->origin_[2] + box->size_[2]);
+            points->SetPoint(7 + i, box->origin_[0], box->origin_[1] + box->size_[1], box->origin_[2] + box->size_[2]);
 
             // Fill the vtkCellArray
             vtkSmartPointer<vtkHexahedron> cell = vtkSmartPointer<vtkHexahedron>::New();
@@ -285,8 +285,8 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
         case Shape3D::Line: {
             Line3D * line = static_cast<Line3D*> (shape);
             // Fill the vtkPoints
-            points->SetPoint(0 + i, line->x_first_, line->y_first_, line->z_first_);
-            points->SetPoint(1 + i, line->x_second_, line->y_second_, line->z_second_);
+            points->SetPoint(0 + i, line->origin_[0], line->origin_[1], line->origin_[2]);
+            points->SetPoint(1 + i, line->origin_[0] + line->size_[0], line->origin_[1] + line->size_[1], line->origin_[2] + line->size_[2]);
 
             // Fill the cells
             vtkSmartPointer<vtkLine> cell = vtkSmartPointer<vtkLine>::New();
