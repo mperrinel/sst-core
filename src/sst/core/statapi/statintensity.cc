@@ -13,6 +13,7 @@
 
 namespace SST {
 namespace Statistics {
+namespace Experimental {
 
 IntensityStatistic::IntensityStatistic(BaseComponent* comp, const std::string& statName,
                  const std::string& statSubId, Params& statParams) :
@@ -56,5 +57,6 @@ Stat3DViz IntensityStatistic::geStat3DViz() const {
     return stat_3d_viz_;
 }
 
+}
 }
 }

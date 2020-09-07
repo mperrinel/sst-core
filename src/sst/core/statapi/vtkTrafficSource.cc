@@ -55,6 +55,8 @@
 #include "sst/core/statapi/statintensity.h"
 #include "sst/core/simulation.h"
 
+namespace Experimental {
+
 vtkStandardNewMacro(vtkTrafficSource);
 
 //----------------------------------------------------------------------------
@@ -324,4 +326,4 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
     exodusWriter->Write();
 }
 
-
+}

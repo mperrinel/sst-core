@@ -19,6 +19,7 @@
 
 namespace SST {
 namespace Statistics {
+namespace Experimental {
 
 /**
     \class VTKStatisticOutputEXODUS
@@ -51,6 +52,7 @@ private:
     void closeFile();
 };
 
+} //namespace Experimental
 } //namespace Statistics
 } //namespace SST
 

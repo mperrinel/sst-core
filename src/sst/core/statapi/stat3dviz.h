@@ -23,6 +23,7 @@ static const std::string lineKey = "line";
 
 namespace SST {
 namespace Statistics {
+namespace Experimental {
 
 // use common base class for the topology/geometry
 struct Shape3D {
@@ -97,6 +98,7 @@ struct Stat3DViz {
     Shape3D* my_shape_;
 };
 
+}
 }
 }
 

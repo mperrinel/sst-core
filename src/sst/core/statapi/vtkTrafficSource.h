@@ -49,6 +49,8 @@
 
 using namespace SST::Statistics;
 
+namespace Experimental {
+
 class vtkTrafficSource : public vtkUnstructuredGridAlgorithm
 {
 public:
@@ -105,6 +107,8 @@ private:
   vtkTrafficSource(const vtkTrafficSource&) = delete;
   void operator=(const vtkTrafficSource&) = delete;
 };
+
+}
 
 #endif
 
