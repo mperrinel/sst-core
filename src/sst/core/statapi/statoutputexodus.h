@@ -19,6 +19,7 @@
 
 namespace SST {
 namespace Statistics {
+namespace Experimental {
 
 /**
     \class StatisticOutputEXODUS
@@ -83,6 +84,7 @@ protected:
 
 };
 
+} //namespace Experimental
 } //namespace Statistics
 } //namespace SST
 

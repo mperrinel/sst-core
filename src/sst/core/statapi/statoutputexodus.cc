@@ -17,7 +17,7 @@
 
 namespace SST {
 namespace Statistics {
-
+namespace Experimental {
 
 StatisticOutputEXODUS::StatisticOutputEXODUS(Params& outputParameters)
     : StatisticOutput (outputParameters), statisticId_(0)
@@ -135,5 +135,6 @@ void StatisticOutputEXODUS::stopRegisterGroup()
 {
 }
 
+} //namespace Experimental
 } //namespace Statistics
 } //namespace SST

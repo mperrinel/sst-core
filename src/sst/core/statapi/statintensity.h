@@ -21,6 +21,7 @@
 
 namespace SST {
 namespace Statistics {
+namespace Experimental {
 
 
 /**
@@ -93,6 +94,7 @@ private:
   Stat3DViz stat_3d_viz_;
 };
 
+}
 }
 }
 

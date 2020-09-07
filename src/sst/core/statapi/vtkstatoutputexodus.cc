@@ -18,7 +18,7 @@
 
 namespace SST {
 namespace Statistics {
-
+namespace Experimental {
 
 VTKStatisticOutputEXODUS::VTKStatisticOutputEXODUS(Params& outputParameters)
     : StatisticOutputEXODUS (outputParameters)
@@ -37,5 +37,6 @@ void VTKStatisticOutputEXODUS::writeExodus() {
                           );
 }
 
+} //namespace Experimental
 } //namespace Statistics
 } //namespace SST
