@@ -71,7 +71,7 @@ public:
   }
 
   // Traffic
-  void SetTrafficProgressMap(std::multimap<uint64_t, sorted_intensity_event>&& trafficProgressMap){
+  void SetTrafficProgressMap(std::multimap<uint64_t, SST::Statistics::Experimental::sorted_intensity_event>&& trafficProgressMap){
       traffic_progress_map_ = std::move(trafficProgressMap);
   }
 
@@ -79,8 +79,8 @@ public:
 
 
   static void vtkOutputExodus(const std::string& fileroot,
-        std::multimap<uint64_t, sorted_intensity_event>&& traffMap,
-        std::vector<Stat3DViz>&& stat3dVizVector);
+        std::multimap<uint64_t, SST::Statistics::Experimental::sorted_intensity_event>&& traffMap,
+        std::vector<SST::Statistics::Experimental::Stat3DViz>&& stat3dVizVector);
 
 
 protected:
@@ -97,7 +97,7 @@ protected:
 
   int NumSteps_;
   double *Steps_;
-  std::multimap<uint64_t, sorted_intensity_event> traffic_progress_map_;
+  std::multimap<uint64_t, SST::Statistics::Experimental::sorted_intensity_event> traffic_progress_map_;
   vtkSmartPointer<vtkIntArray> Traffics;
   vtkSmartPointer<vtkPoints> Points;
   vtkSmartPointer<vtkCellArray> Cells;

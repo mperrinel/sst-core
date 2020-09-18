@@ -188,8 +188,8 @@ void vtkTrafficSource::PrintSelf(ostream& os, vtkIndent indent)
 }
 
 void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
-    std::multimap<uint64_t, sorted_intensity_event>&& traffMap,
-    std::vector<Stat3DViz>&& stat3dVizVector)
+    std::multimap<uint64_t, SST::Statistics::Experimental::sorted_intensity_event>&& traffMap,
+    std::vector<SST::Statistics::Experimental::Stat3DViz>&& stat3dVizVector)
 {
     static constexpr int NUM_POINTS_PER_BOX = 8;
     static constexpr int NUM_POINTS_PER_LINK = 2;
@@ -200,13 +200,13 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
     // Compute the number of the points
     int numberOfPoints = 0;
     for (const auto& stat3dViz : stat3dVizVector) {
-      Shape3D *shape = stat3dViz.my_shape_;
+      SST::Statistics::Experimental::Shape3D *shape = stat3dViz.my_shape_;
       switch (stat3dViz.my_shape_->shape) {
-      case Shape3D::Box: {
+      case SST::Statistics::Experimental::Shape3D::Box: {
           numberOfPoints += NUM_POINTS_PER_BOX;
           break;
       }
-      case Shape3D::Line: {
+      case SST::Statistics::Experimental::Shape3D::Line: {
           numberOfPoints += NUM_POINTS_PER_LINK;
           break;
       }
@@ -227,10 +227,10 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
     int i = 0;
     int cellId = 0;
     for (const auto& stat3dViz : stat3dVizVector) {
-        Shape3D *shape = stat3dViz.my_shape_;
+        SST::Statistics::Experimental::Shape3D *shape = stat3dViz.my_shape_;
         switch (stat3dViz.my_shape_->shape) {
-        case Shape3D::Box: {
-            Box3D * box = static_cast<Box3D*> (shape);
+        case SST::Statistics::Experimental::Shape3D::Box: {
+            SST::Statistics::Experimental::Box3D * box = static_cast<SST::Statistics::Experimental::Box3D*> (shape);
             // Fill the vtkPoints
             points->SetPoint(0 + i, box->origin_[0], box->origin_[1], box->origin_[2]);
             points->SetPoint(1 + i, box->origin_[0] + box->size_[0], box->origin_[1], box->origin_[2]);
@@ -252,8 +252,8 @@ void vtkTrafficSource::vtkOutputExodus(const std::string& fileroot,
             i += NUM_POINTS_PER_BOX;
             break;
         }
-        case Shape3D::Line: {
-            Line3D * line = static_cast<Line3D*> (shape);
+        case SST::Statistics::Experimental::Shape3D::Line: {
+            SST::Statistics::Experimental::Line3D * line = static_cast<SST::Statistics::Experimental::Line3D*> (shape);
             // Fill the vtkPoints
             points->SetPoint(0 + i, line->origin_[0], line->origin_[1], line->origin_[2]);
             points->SetPoint(1 + i, line->origin_[0] + line->size_[0], line->origin_[1] + line->size_[1], line->origin_[2] + line->size_[2]);
