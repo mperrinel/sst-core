@@ -243,10 +243,10 @@ else
     printf "%38s : No\n" "libz compression library"
 fi
 
-if test -z "$vtk_path"; then
-    printf "%38s : No\n" "VTK"
-else
+if test -d "$vtk_path"; then
     printf "%38s : $vtk_version @ $vtk_path\n" "VTK"
+else
+    printf "%38s : No\n" "VTK"
 fi
 
 echo "-------------------------------------------------------" 

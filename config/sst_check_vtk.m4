@@ -48,7 +48,7 @@ AC_DEFUN([SST_CHECK_VTK], [
   VTK_CPPFLAGS="-I${vtk_path}/include/vtk-${vtk_version}"
   VTK_LIBS="-lvtkCommonCore-${vtk_version} -lvtkCommonDataModel-${vtk_version} -lvtkIOXML-${vtk_version} -lvtkIOExodus-${vtk_version}"
   VTK_LIBS="${VTK_LIBS} -lvtkCommonExecutionModel-${vtk_version}"
-  VTK_LDFLAGS="-L${vtk_path}/lib"
+  VTK_LDFLAGS="-L${vtk_path}/lib -rpath ${vtk_path}/lib"
   AC_SUBST([VTK_CPPFLAGS])
   AC_SUBST([VTK_LIBS])
   AC_SUBST([VTK_LDFLAGS])
