@@ -246,10 +246,10 @@ if test "x$PYTHON_VERSION3" = "xno"; then
     printf "DEPRECATION NOTICE: Use of Python 2 is deprecated in favor of Python 3.5 or greater. Support for Python 2 may be removed in SST 12 or later.\n"
 fi
 
-if test -z "$vtk_path"; then
-    printf "%38s : No\n" "VTK"
-else
+if test -d "$vtk_path"; then
     printf "%38s : $vtk_version @ $vtk_path\n" "VTK"
+else
+    printf "%38s : No\n" "VTK"
 fi
 
 echo "-------------------------------------------------------" 
