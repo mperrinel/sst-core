@@ -31,8 +31,10 @@ REENABLE_WARNING
 #include "sst/core/sst_types.h"
 #include "sst/core/model/python/pymodel.h"
 #include "sst/core/model/python/pymodel_comp.h"
+#include "sst/core/model/python/pymodel_stat.h"
 #include "sst/core/model/python/pymodel_link.h"
 #include "sst/core/model/python/pymodel_statgroup.h"
+#include "sst/core/model/python/pymodel_unitalgebra.h"
 #include "sst/core/model/element_python.h"
 
 #include "sst/core/simulation.h"
@@ -41,12 +43,10 @@ REENABLE_WARNING
 #include "sst/core/configGraph.h"
 DISABLE_WARN_STRICT_ALIASING
 
+using namespace SST;
 using namespace SST::Core;
 
 SST::Core::SSTPythonModelDefinition *gModel = nullptr;
-
-extern "C" {
-
 
 struct ModuleLoaderPy_t {
     PyObject_HEAD
@@ -74,15 +74,17 @@ static PyObject* mlFindModule(PyObject *self, PyObject *args);
 static PyObject* mlLoadModule(PyObject *self, PyObject *args);
 
 
-
-
 static PyMethodDef mlMethods[] = {
     {   "find_module", mlFindModule, METH_VARARGS, "Finds an SST Element Module"},
     {   "load_module", mlLoadModule, METH_VARARGS, "Loads an SST Element Module"},
     {   nullptr, nullptr, 0, nullptr }
 };
 
-
+#if PY_MAJOR_VERSION == 3
+#if PY_MINOR_VERSION == 8
+DISABLE_WARN_DEPRECATED_DECLARATION
+#endif
+#endif
 static PyTypeObject ModuleLoaderType = {
     SST_PY_OBJ_HEAD
     "ModuleLoader",            /* tp_name */
@@ -135,7 +137,13 @@ static PyTypeObject ModuleLoaderType = {
     0,                         /* tp_version_tag */
     SST_TP_FINALIZE                /* Python3 only */
     SST_TP_VECTORCALL              /* Python3 only */
+    SST_TP_PRINT_DEP               /* Python3.8 only */
 };
+#if PY_MAJOR_VERSION == 3
+#if PY_MINOR_VERSION == 8
+REENABLE_WARNING
+#endif
+#endif
 
 
 // I hate having to do this through a global variable
@@ -834,20 +842,22 @@ static struct PyModuleDef sstModuleDef {
 };
 #endif
 
-}  /* extern C */
-
 static PyObject* PyInit_sst(void)
 {
     // Initialize our types
     PyModel_ComponentType.tp_new = PyType_GenericNew;
     PyModel_SubComponentType.tp_new = PyType_GenericNew;
+    Experimental::PyModel_StatType.tp_new = PyType_GenericNew;
     PyModel_LinkType.tp_new = PyType_GenericNew;
+    PyModel_UnitAlgebraType.tp_new = PyType_GenericNew;
     PyModel_StatGroupType.tp_new = PyType_GenericNew;
     PyModel_StatOutputType.tp_new = PyType_GenericNew;
     ModuleLoaderType.tp_new = PyType_GenericNew;
     if ( ( PyType_Ready(&PyModel_ComponentType) < 0 ) ||
          ( PyType_Ready(&PyModel_SubComponentType) < 0 ) ||
          ( PyType_Ready(&PyModel_LinkType) < 0 ) ||
+         ( PyType_Ready(&PyModel_UnitAlgebraType) < 0 ) ||
+         ( PyType_Ready(&Experimental::PyModel_StatType) < 0 ) ||
          ( PyType_Ready(&PyModel_StatGroupType) < 0 ) ||
          ( PyType_Ready(&PyModel_StatOutputType) < 0 ) ||
          ( PyType_Ready(&ModuleLoaderType) < 0 ) ) {
@@ -861,15 +871,19 @@ static PyObject* PyInit_sst(void)
 
     Py_INCREF(&PyModel_ComponentType);
     Py_INCREF(&PyModel_SubComponentType);
+    Py_INCREF(&Experimental::PyModel_StatType);
     Py_INCREF(&PyModel_LinkType);
+    Py_INCREF(&PyModel_UnitAlgebraType);
     Py_INCREF(&PyModel_StatGroupType);
     Py_INCREF(&PyModel_StatOutputType);
     Py_INCREF(&ModuleLoaderType);
 
     // Add the types
     PyModule_AddObject(module, "Link", (PyObject*)&PyModel_LinkType);
+    PyModule_AddObject(module, "UnitAlgebra", (PyObject*)&PyModel_UnitAlgebraType);
     PyModule_AddObject(module, "Component", (PyObject*)&PyModel_ComponentType);
     PyModule_AddObject(module, "SubComponent", (PyObject*)&PyModel_SubComponentType);
+    PyModule_AddObject(module, "Statistic", (PyObject*)&Experimental::PyModel_StatType);
     PyModule_AddObject(module, "StatisticGroup", (PyObject*)&PyModel_StatGroupType);
     PyModule_AddObject(module, "StatisticOutput", (PyObject*)&PyModel_StatOutputType);
     PyModule_AddObject(module, "ModuleLoader", (PyObject*)&ModuleLoaderType);

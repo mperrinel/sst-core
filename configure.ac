@@ -79,6 +79,7 @@ AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$DOXYGEN" = "doxygen"])
 
 SST_CHECK_PREVIEW_BUILD()
+SST_ENABLE_TESTFRAMEWORK_DEV()
 
 SST_CHECK_OSX()
 SST_CHECK_MPI([], [AC_MSG_ERROR([Could not find MPI package])])
@@ -87,6 +88,7 @@ SST_CHECK_PYTHON([], [AC_MSG_ERROR([Could not find Python, this is required for 
 SST_CHECK_LIBZ([have_zlib="yes"],[have_zlib="no"],[AC_MSG_ERROR([zlib was requested but could not be found.])])
 SST_CHECK_HDF5()
 SST_CHECK_MEM_POOL()
+SST_CHECK_VTK()
 
 SST_ENABLE_DEBUG_OUTPUT()
 SST_ENABLE_DEBUG_EVENT_TRACKING()
@@ -195,7 +197,7 @@ if test "x$SSTCORE_GIT_HEADSHA" != "x$PACKAGE_VERSION"; then
 printf "%38s : %s\n" "Git Branch" "$SSTCORE_GIT_BRANCH"
 printf "%38s : %s\n" "Git HEAD SHA" "$SSTCORE_GIT_HEADSHA"
 printf "%38s : %s\n" "Branch Commit Count" "$SSTCORE_GIT_COMMITCOUNT"
-else 
+else
 printf "%38s : %s\n" "Version" "SST-Core $PACKAGE_VERSION"
 fi
 printf "%38s : %s\n" "Prefix" "$prefix"
@@ -239,6 +241,12 @@ if test "x$sst_check_libz_happy" = "xyes" ; then
     printf "%38s : YES\n" "libz compression library"
 else
     printf "%38s : No\n" "libz compression library"
+fi
+
+if test -d "$vtk_path"; then
+    printf "%38s : $vtk_version @ $vtk_path\n" "VTK"
+else
+    printf "%38s : No\n" "VTK"
 fi
 
 echo "-------------------------------------------------------" 

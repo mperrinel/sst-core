@@ -29,13 +29,41 @@ using namespace std;
 
 namespace SST {
 
+// static bool zero_latency_warning = false;
 
 void ConfigLink::updateLatencies(TimeLord *timeLord)
 {
+    // Need to clean up some elements before we can test for zero latency
     latency[0] = timeLord->getSimCycles(latency_str[0], __FUNCTION__);
+    // if ( latency[0] == 0 ) {
+    //     latency[0] = 1;
+    //     if ( !zero_latency_warning ) {
+    //         Output::getDefaultObject().output("WARNING: Found zero latency link.  Setting all zero latency links to a latency of %s\n",
+    //                                           Simulation::getTimeLord()->getTimeBase().toStringBestSI().c_str());
+    //         zero_latency_warning = true;
+    //     }
+    // }
     latency[1] = timeLord->getSimCycles(latency_str[1], __FUNCTION__);
+    // if ( latency[1] == 0 ) {
+    //     latency[1] = 1;
+    //     if ( !zero_latency_warning ) {
+    //         Output::getDefaultObject().output("WARNING: Found zero latency link.  Setting all zero latency links to a latency of %s\n",
+    //                                           Simulation::getTimeLord()->getTimeBase().toStringBestSI().c_str());
+    //         zero_latency_warning = true;
+    //     }
+    // }
 }
 
+namespace Experimental {
+
+void ConfigStatistic::addParameter(const std::string& key, const std::string& value, bool overwrite)
+{
+    bool bk = params.enableVerify(false);
+    params.insert(key, value, overwrite);
+    params.enableVerify(bk);
+}
+
+}
 
 bool ConfigStatGroup::addComponent(ComponentId_t id)
 {
@@ -115,10 +143,11 @@ void ConfigComponent::print(std::ostream &os) const {
     os << "  Params:" << std::endl;
     params.print_all_params(os, "    ");
     os << "  Statistics:" << std::endl;
-    for ( auto & si : enabledStatistics ) {
-        os << "    " << si.name << std::endl;
+    for ( auto & pair : enabledStatNames ) {
+        os << "    " << pair.first << std::endl;
         os << "      Params:" << std::endl;
-        si.params.print_all_params(os, "      ");
+        auto iter = enabledStatistics.find(pair.second);
+        iter->second.params.print_all_params(os, "      ");
     }
     os << "  SubComponents:\n";
     for ( auto & sc : subComponents ) {
@@ -183,6 +212,12 @@ ComponentId_t ConfigComponent::getNextSubComponentID()
         
 }
 
+StatisticId_t ConfigComponent::getNextStatisticID()
+{
+    uint16_t statId = nextStatID++;
+    return STATISTIC_ID_CREATE( id, statId );
+}
+
 ConfigComponent* ConfigComponent::getParent() const {
     if ( id == COMPONENT_ID_MASK(id) ) {
         return nullptr;
@@ -239,52 +274,47 @@ void ConfigComponent::addParameter(const std::string& key, const std::string& va
     params.enableVerify(bk);
 }
 
-void ConfigComponent::enableStatistic(const std::string& statisticName, bool recursively)
+Experimental::ConfigStatistic* ConfigComponent::enableStatistic(const std::string& statisticName, bool recursively)
 {
     // NOTE: For every statistic in the enabledStatistics List, there must be
     //       a corresponding params entry in enabledStatParams list.  The two
     //       lists will always be the same size.
-
     if ( recursively ) {
         for ( auto &sc : subComponents ) {
             sc.enableStatistic(statisticName, true);
         }
     }
-
-    // Check for Enable All Statistics
-    if (statisticName == STATALLFLAG) {
-        // Force the STATALLFLAG to always be on the bottom of the list.
-        // First check to see if anything is in the vector, if vector is empty,
-        // a STATALLFLAG flag will be added to the vector
-        if (false == enabledStatistics.empty()) {
-            // The vector is populated, so see if the STATALLFLAG
-            // already exists if it does, we are done
-            if (STATALLFLAG != enabledStatistics.back().name) {
-                // Add a STATALLFLAG to end of the vector
-                enabledStatistics.emplace_back(STATALLFLAG);
-            }
-        } else {
-            // Add a STATALLFLAG to end of the vector
-            enabledStatistics.emplace_back(STATALLFLAG);
-        }
+    
+    StatisticId_t stat_id;
+    if (statisticName == STATALLFLAG){
+      // special sentinel id for enable all
+      enabledAllStats = true;
+      stat_id = STATALL_ID;
+      enabledStatNames[statisticName] = stat_id;
+    } else if (!Factory::getFactory()->DoesComponentInfoStatisticNameExist(type, statisticName)){
+      //this is not a valid statistic
+      return nullptr;
     } else {
-        // Check to see if the stat is already in the list
-        for ( auto & si : enabledStatistics ) {
-            if ( statisticName == si.name ) {
-                // We found the name already in the enabledStatistics list, do nothing
-                return;
-            }
-        }
-
-        // statisticName not in list, so add statistic and params to top of the vectors
-        enabledStatistics.emplace(enabledStatistics.begin(), statisticName);
+      //this is a valid statistic
+      auto iter = enabledStatNames.find(statisticName);
+      if (iter == enabledStatNames.end()){
+        //this is the first time being enabled
+        stat_id = getNextStatisticID();
+        enabledStatNames[statisticName] = stat_id;
+      } else {
+        //this was already enabled
+        stat_id = iter->second;
+      }
     }
+    
+    Experimental::ConfigStatistic& cs = enabledStatistics[stat_id];
+    cs.id = stat_id;
+    return &cs;
 }
-
 
 void ConfigComponent::addStatisticParameter(const std::string& statisticName, const std::string& param, const std::string& value, bool recursively)
 {
-    // NOTE: For every statistic in the enabledStatistics List, there must be
+    // NOTE: For every statistic in the enabledStatistics map, there must be
     //       a corresponding params entry in enabledStatParams list.  The two
     //       lists will always be the same size.
     if ( recursively ) {
@@ -293,15 +323,13 @@ void ConfigComponent::addStatisticParameter(const std::string& statisticName, co
         }
     }
 
-
-    // Scan the enabledStatistics list for the statistic name
-    for ( auto & si : enabledStatistics ) {
-        // Check to see if the names match.  NOTE this also works for the STATALLFLAG
-        if ( statisticName == si.name ) {
-            // Add/set the parameter
-            si.params.insert(param, value);
-        }
+    Experimental::ConfigStatistic* cs = findStatistic(statisticName);
+    if (!cs){
+      Output::getDefaultObject().fatal(CALL_INFO, 1,
+          "cannot add parameter '%s' to unknown statistic '%s'",
+          param.c_str(), statisticName.c_str());
     }
+    cs->params.insert(param, value);
 }
 
 
@@ -313,13 +341,7 @@ void ConfigComponent::setStatisticParameters(const std::string& statisticName, c
         }
     }
 
-    for ( auto & si : enabledStatistics ) {
-        // Check to see if the names match.  NOTE this also works for the STATALLFLAG
-        if ( statisticName == si.name ) {
-            si.params.insert(params);
-        }
-    }
-
+    findStatistic(statisticName)->params.insert(params);
 }
 
 void ConfigComponent::setStatisticLoadLevel(uint8_t level, bool recursively)
@@ -401,6 +423,38 @@ ConfigComponent* ConfigComponent::findSubComponentByName(const std::string& name
         }
     }
     return nullptr;
+}
+
+Experimental::ConfigStatistic* ConfigComponent::insertStatistic(StatisticId_t sid)
+{
+  ConfigComponent* parent = getParent();
+  if (parent){
+    return parent->insertStatistic(sid);
+  } else {
+    return &enabledStatistics[sid];
+  }
+}
+
+Experimental::ConfigStatistic* ConfigComponent::findStatistic(const std::string& name) const
+{
+  auto iter = enabledStatNames.find(name);
+  if (iter != enabledStatNames.end()){
+    StatisticId_t id = iter->second;
+    return findStatistic(id);
+  } else {
+    return nullptr;
+  }
+}
+
+Experimental::ConfigStatistic* ConfigComponent::findStatistic(StatisticId_t sid) const
+{
+    auto iter = enabledStatistics.find(sid);
+    if (iter == enabledStatistics.end()){
+      return nullptr;
+    } else {
+      //I hate that I have to do this
+      return const_cast<Experimental::ConfigStatistic*>(&iter->second);
+    }
 }
 
 std::vector<LinkId_t> ConfigComponent::allLinks() const {
@@ -786,6 +840,12 @@ ConfigComponent* ConfigGraph::findComponentByName(const std::string& name) {
     return nullptr;
 }
 
+Experimental::ConfigStatistic* ConfigGraph::findStatistic(StatisticId_t id) const
+{
+  ComponentId_t cfg_id = CONFIG_COMPONENT_ID_MASK(id);
+  return findComponent(cfg_id)->findStatistic(id);
+}
+
 ConfigGraph*
 ConfigGraph::getSubGraph(uint32_t start_rank, uint32_t end_rank)
 {
@@ -904,45 +964,42 @@ ConfigGraph::getCollapsedPartitionGraph()
     PartitionComponentMap_t& pcomps = graph->getComponentMap();
     PartitionLinkMap_t& plinks = graph->getLinkMap();
 
+
+    // Mark all Components as not visited
+    for ( ConfigComponentMap_t::iterator it = comps.begin(); it != comps.end(); ++it ) it->visited = false;
+
     // SparseVectorMap is slow for random inserts, so make sure we
     // insert both components and links in order of ID, which is the
     // key for the SparseVectorMap in both cases
     ComponentIdMap_t group;
     for ( ConfigComponentMap_t::iterator it = comps.begin(); it != comps.end(); ++it ) {
-        const ConfigComponent& comp = *it;
-
+        if ( it->visited ) continue;
         // Get the no-cut group for this component
         group.clear();
         getConnectedNoCutComps(it->id,group);
 
+        ComponentId_t id = pcomps.size();
+        pcomps.insert(PartitionComponent(id));
+        PartitionComponent& pcomp = pcomps[id];
 
-        // Check to see if this has already been put in map.  Do this
-        // by seeing if the first item in the connected components is
-        // the current ID.  If not, then it's already in the list.
-        if ( *group.begin() == comp.id ) {
-            ComponentId_t id = pcomps.size();
-            pcomps.insert(PartitionComponent(id));
-            PartitionComponent& pcomp = pcomps[id];
+        // Iterate over the group and add the weights and add any
+        // links that connect outside the group
+        for ( ComponentIdMap_t::const_iterator i = group.begin(); i != group.end(); ++i ) {
+            const ConfigComponent& comp = comps[*i];
+            // Compute the new weight
+            pcomp.weight += comp.weight;
+            pcomp.group.insert(comp.id);
 
-            // Iterate over the group and add the weights and add any
-            // links that connect outside the group
-            for ( ComponentIdMap_t::const_iterator i = group.begin(); i != group.end(); ++i ) {
-                const ConfigComponent& comp = comps[*i];
-                // Compute the new weight
-                pcomp.weight += comp.weight;
-                pcomp.group.insert(comp.id);
+            // Walk through all the links and insert the ones that connect
+            // outside the group
+            for ( LinkId_t id : comp.allLinks() ) {
+                const ConfigLink& link = links[id];
 
-                // Walk through all the links and insert the ones that connect
-                // outside the group
-                for ( LinkId_t id : comp.allLinks() ) {
-                    const ConfigLink& link = links[id];
-
-                    if ( !group.contains(COMPONENT_ID_MASK(link.component[0])) || !group.contains(COMPONENT_ID_MASK(link.component[1]) ) ) {
-                        pcomp.links.push_back(link.id);
-                    }
-                    else {
-                        deleted_links.insert(link.id);
-                    }
+                if ( !group.contains(COMPONENT_ID_MASK(link.component[0])) || !group.contains(COMPONENT_ID_MASK(link.component[1]) ) ) {
+                    pcomp.links.push_back(link.id);
+                }
+                else {
+                    deleted_links.insert(link.id);
                 }
             }
         }
@@ -992,6 +1049,7 @@ ConfigGraph::getConnectedNoCutComps(ComponentId_t start, ComponentIdMap_t& group
 
     // First, get the component
     ConfigComponent& comp = comps[start];
+    comp.visited = true;
 
     for ( LinkId_t id : comp.allLinks() ) {
         ConfigLink& link = links[id];
