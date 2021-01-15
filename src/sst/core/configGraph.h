@@ -153,7 +153,7 @@ public:
 class ConfigStatGroup : public SST::Core::Serialization::serializable {
 public:
     std::string name;
-    std::map<std::string, Params> statMap;
+    std::vector<StatisticId_t> statistics;
     std::vector<ComponentId_t> components;
     size_t outputID;
     UnitAlgebra outputFrequency;
@@ -163,7 +163,7 @@ public:
 
 
     bool addComponent(ComponentId_t id);
-    bool addStatistic(const std::string& name, Params &p);
+    bool addStatistic(StatisticId_t id);
     bool setOutput(size_t id);
     bool setFrequency(const std::string& freq);
 
@@ -178,7 +178,7 @@ public:
 
     void serialize_order(SST::Core::Serialization::serializer &ser) override {
         ser & name;
-        ser & statMap;
+        ser & statistics;
         ser & components;
         ser & outputID;
         ser & outputFrequency;

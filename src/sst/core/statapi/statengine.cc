@@ -54,18 +54,27 @@ void StatisticProcessingEngine::setup(ConfigGraph *graph)
     for ( auto & cfg : graph->getStatGroups() ) {
         m_statGroups.emplace_back(cfg.second);
 
-        /* Force component / statistic registration for Group stats*/
-        for ( ComponentId_t compID : cfg.second.components ) {
-            ConfigComponent *ccomp = graph->findComponent(compID);
-            if ( ccomp ) { /* Should always be true */
-                for ( auto &kv : cfg.second.statMap ) {
-                    ccomp->enableStatistic(kv.first);
-                    ccomp->setStatisticParameters(kv.first, kv.second);
-                }
-            }
+        // Register to the group all the component Id associated to the statistic
+        StatisticGroup &currentLastGroup = m_statGroups.back();
+        for ( StatisticId_t statId : currentLastGroup.statistics ) {
+            ConfigStatistic *cstat = graph->findStatistic(statId);
+            // TODO STATISTICGROUP: review
+            //ComponentId_t compId = cstat->compId;
+            //currentLastGroup.components.emplace_back(compId);
+        }
+
+        // Add the statistics of the group for every component of the group.
+        for ( StatisticId_t statId : currentLastGroup.statistics ) {
+            ConfigStatistic *cstat = graph->findStatistic(statId);
+
+             for ( ComponentId_t compId : currentLastGroup.components ) {
+               ConfigComponent *ccomp = graph->findComponent(compId);
+               // TODO STATISTICGROUP: review
+//               ccomp->addStatistic(statId, cstat->name);
+//               ccomp->setStatisticParameters(cstat->name, cstat->params);
+             }
         }
     }
-
 }
 
 StatisticProcessingEngine::~StatisticProcessingEngine()
@@ -119,8 +128,21 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat)
     }
 
 
-    StatisticGroup &group = getGroupForStatistic(stat);
-    if ( group.isDefault ) {
+    UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
+
+    StatisticGroup *group = nullptr;
+    for ( auto & g : m_statGroups ) {
+       for ( auto  compId : g.components ) {
+          if ( compId == stat->getComponent()->getId() ) {
+              group = &g;
+          }
+      }
+    }
+    if ( nullptr == group ) {
+      group = &m_defaultGroup;
+    }
+
+    if ( group->isDefault ) {
         // If the mode is Periodic Based, the add the statistic to the
         // StatisticProcessingEngine otherwise add it as an Event Based Stat.
         UnitAlgebra collectionRate = stat->m_statParams.find<SST::UnitAlgebra>("rate", "0ns");
@@ -142,24 +164,23 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat)
         }
         if (!success) return false;
     } else {
-        switch (stat->getRegisteredCollectionMode()){
-        case StatisticBase::STAT_MODE_PERIODIC:
-        case StatisticBase::STAT_MODE_DUMP_AT_END:
-          break;
-        default:
-          m_output.output("ERROR: Statistics in groups must be periodic or dump at end\n");
-          return false;
-        }
+      switch (stat->getRegisteredCollectionMode()){
+      case StatisticBase::STAT_MODE_PERIODIC:
+      case StatisticBase::STAT_MODE_DUMP_AT_END:
+        break;
+      default:
+        m_output.output("ERROR: Statistics in groups must be periodic or dump at end\n");
+        return false;
+      }
     }
 
-    // Make sure that the wireup has not been completed
     if (true == stat->getComponent()->getSimulation()->isWireUpFinished()) {
-      if (!group.output->supportsDynamicRegistration()){
+      if (!group->output->supportsDynamicRegistration()){
         m_output.fatal(CALL_INFO, 1, "ERROR: Statistic %s - "
              "Cannot be registered for output %s after the Components have been wired up. "
              "Statistics on output %s must be registered on Component creation. exiting...\n",
-             stat->getFullStatName().c_str(), group.output->getStatisticOutputName().c_str(),
-             group.output->getStatisticOutputName().c_str());
+             stat->getFullStatName().c_str(), group->output->getStatisticOutputName().c_str(),
+             group->output->getStatisticOutputName().c_str());
       } else if (stat->getRegisteredCollectionMode() != StatisticBase::STAT_MODE_DUMP_AT_END) {
         m_output.fatal(CALL_INFO, 1, "ERROR: Statistic %s - "
              "Stats can only be registered dynamically in DUMP_AT_END mode with no periodic clock",
@@ -167,10 +188,8 @@ bool StatisticProcessingEngine::registerStatisticCore(StatisticBase* stat)
       }
     }
 
-    /* All checks pass.  Add the stat */
-    group.addStatistic(stat);
-
-    if ( group.isDefault ) {
+    group->addStatistic(stat);
+    if ( group->isDefault ) {
         getOutputForStatistic(stat)->registerStatistic(stat);
     }
 
@@ -227,8 +246,8 @@ void StatisticProcessingEngine::endOfSimulation()
     for ( StatisticBase * stat : m_EventStatisticArray ) {
         // Check to see if the Statistic is to output at end of sim
         if (true == stat->getFlagOutputAtEndOfSim()) {
-            // Perform the output
-           performStatisticOutputImpl(stat, true);
+          // Perform the output
+          performStatisticOutputImpl(stat, true);
         }
     }
 
@@ -249,7 +268,6 @@ void StatisticProcessingEngine::endOfSimulation()
     for ( auto & sg : m_statGroups ) {
         performStatisticGroupOutputImpl(sg, true);
     }
-
 
     for ( auto &so : m_statOutputs ) {
         so->endOfSimulation();
@@ -292,20 +310,17 @@ StatisticProcessingEngine::castError(const std::string& type, const std::string&
 
 StatisticOutput* StatisticProcessingEngine::getOutputForStatistic(const StatisticBase *stat) const
 {
-    return getGroupForStatistic(stat).output;
-}
-
-
-/* Return the group that would claim this stat */
-StatisticGroup& StatisticProcessingEngine::getGroupForStatistic(const StatisticBase *stat) const
-{
-    for ( auto & g : m_statGroups ) {
-        if ( g.claimsStatistic(stat) ) {
-            return const_cast<StatisticGroup&>(g);
-        }
+  for ( auto & g : m_statGroups ) {
+     for ( auto  compId : g.components ) {
+        if ( compId == stat->getComponent()->getId() ) {
+            return g.output;
+      }
     }
-    return const_cast<StatisticGroup&>(m_defaultGroup);
+  }
+
+  return nullptr;
 }
+
 
 bool
 StatisticProcessingEngine::addEndOfSimStatistic(StatisticBase* /*stat*/)
@@ -461,7 +476,6 @@ void StatisticProcessingEngine::performStatisticOutput(StatisticBase* stat, bool
 
 void StatisticProcessingEngine::performStatisticOutputImpl(StatisticBase* stat, bool endOfSimFlag /*=false*/)
 {
-
     StatisticOutput* statOutput = getOutputForStatistic(stat);
 
     // Has the simulation started?

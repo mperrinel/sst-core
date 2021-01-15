@@ -180,11 +180,12 @@ void PythonConfigGraphOutput::generateStatGroup(const ConfigGraph* graph, const 
         fprintf(outputFile, "))\n");
     }
 
-    for ( auto &i : grp.statMap ) {
-        fprintf(outputFile, "%s.addStatistic(\"%s\"", pyGroupName, i.first.c_str());
-        if ( !i.second.empty() ) {
+    for ( StatisticId_t id : grp.statistics ) {
+        const ConfigStatistic *stat = graph->findStatistic(id);
+        fprintf(outputFile, "%s.addStatistic(\"%lli\"", pyGroupName, stat->id);
+        if ( stat) {
             fprintf(outputFile, ", ");
-            generateParams(i.second);
+            generateParams(stat->params);
         }
         fprintf(outputFile, ")\n");
     }

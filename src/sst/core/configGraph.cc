@@ -71,14 +71,19 @@ bool ConfigStatGroup::addComponent(ComponentId_t id)
 }
 
 
-bool ConfigStatGroup::addStatistic(const std::string& name, Params &p)
+bool ConfigStatGroup::addStatistic(StatisticId_t id)
 {
-    statMap[name] = p;
-    if ( outputFrequency.getRoundedValue() == 0 ) {
-        /* aka, not yet really set to anything other than 0 */
-        setFrequency(p.find<std::string>("rate", "0ns"));
-    }
-    return true;
+  if ( std::find(statistics.begin(), statistics.end(), id) == statistics.end() ) {
+      statistics.push_back(id);
+  }
+  return true;
+
+  // TODO ? : get the param frequeny and call setFrequency with it with 0 default value
+  //         setFrequency(p.find<std::string>("rate", "0ns"));
+  //  if ( outputFrequency.getRoundedValue() == 0 ) {
+  //      /* aka, not yet really set to anything other than 0 */
+  //      setFrequency(p.find<std::string>("rate", "0ns"));
+  //  }
 }
 
 
@@ -109,15 +114,22 @@ std::pair<bool, std::string> ConfigStatGroup::verifyStatsAndComponents(const Con
             ss << "Component id " << id << " is not a valid component";
             return std::make_pair(false, ss.str());
         }
-        for ( auto & statKV : statMap ) {
-
-            bool ok = Factory::getFactory()->DoesComponentInfoStatisticNameExist(comp->type, statKV.first);
-
-            if ( !ok ) {
-                std::stringstream ss;
-                ss << "Component " << comp->name << " does not support statistic " << statKV.first;
-                return std::make_pair(false, ss.str());
+        for ( auto & statKV : statistics ) {
+            const ConfigStatistic* stat = graph->findStatistic(statKV);
+            if ( !stat) {
+              std::stringstream ss;
+              ss << "Statistic id " << statKV << " is not a valid statistic";
+              return std::make_pair(false, ss.str());
             }
+
+
+            // TODO: Find the correct way to get the stat name since it is not associated to the ConfigStatistic
+//            bool ok = Factory::getFactory()->DoesComponentInfoStatisticNameExist(comp->type, stat->name);
+//            if ( !ok ) {
+//                std::stringstream ss;
+//                ss << "Component " << comp->name << " does not support statistic " << stat->name;
+//                return std::make_pair(false, ss.str());
+//            }
         }
     }
 

@@ -41,7 +41,7 @@ public:
     UnitAlgebra outputFreq;
 
     std::vector<ComponentId_t> components;
-    std::vector<std::string> statNames;
+    std::vector<StatisticId_t> statistics;
     std::vector<StatisticBase*> stats;
 };
 

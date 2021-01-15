@@ -32,13 +32,12 @@ StatisticGroup::StatisticGroup(const ConfigStatGroup &csg) :
     outputFreq(csg.outputFrequency),
     components(csg.components)
 {
-
     if ( !output->acceptsGroups() ) {
         Output::getDefaultObject().fatal(CALL_INFO, 1, "Statistic Output type %s cannot handle Statistic Groups\n", output->getStatisticOutputName().c_str());
     }
 
-    for ( auto & kv : csg.statMap ) {
-        statNames.push_back(kv.first);
+    for ( auto & kv : csg.statistics ) {
+        statistics.push_back(kv);
     }
 }
 
@@ -51,16 +50,16 @@ bool StatisticGroup::containsStatistic(const StatisticBase *stat) const
 }
 
 
-bool StatisticGroup::claimsStatistic(const StatisticBase *stat) const
-{
-    if ( isDefault ) return true;
-    if ( std::find(statNames.begin(), statNames.end(), stat->getStatName()) != statNames.end() ) {
-        if ( std::find(components.begin(), components.end(), stat->getComponent()->getId()) != components.end() )
-            return true;
-    }
+//bool StatisticGroup::claimsStatistic(const StatisticBase *stat) const
+//{
+//    if ( isDefault ) return true;
+//    if ( std::find(statNames.begin(), statNames.end(), stat->getStatName()) != statNames.end() ) {
+//        if ( std::find(components.begin(), components.end(), stat->getComponent()->getId()) != components.end() )
+//            return true;
+//    }
 
-    return false;
-}
+//    return false;
+//}
 
 
 void StatisticGroup::addStatistic(StatisticBase *stat)

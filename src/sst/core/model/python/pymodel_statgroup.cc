@@ -23,6 +23,7 @@ REENABLE_WARNING
 
 #include "sst/core/model/python/pymodel.h"
 #include "sst/core/model/python/pymodel_comp.h"
+#include "sst/core/model/python/pymodel_stat.h"
 #include "sst/core/model/python/pymodel_statgroup.h"
 
 #include "sst/core/sst_types.h"
@@ -71,21 +72,15 @@ static void sgDealloc(StatGroupPy_t *self)
 static PyObject* sgAddStat(PyObject *self, PyObject *args)
 {
     PyErr_Clear();
-
-    char *statName = nullptr;
-    PyObject *paramsDict = nullptr;
-
-    int argOK = PyArg_ParseTuple(args, "s|O!", &statName, &PyDict_Type, &paramsDict);
-    if ( !argOK )
-        return nullptr;
-
-    Params params = convertToParams(paramsDict);
-
     ConfigStatGroup *csg = ((StatGroupPy_t*)self)->ptr;
-    if ( !csg->addStatistic(statName, params) ) {
-        PyErr_SetString(PyExc_RuntimeError, "Unable to create statistic");
+
+    if ( PyObject_TypeCheck(args, &PyModel_StatType)) {
+        csg->addStatistic(((StatisticPy_t*)args)->obj->getID());
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected Statistic type");
         return nullptr;
     }
+
     bool verified;
     std::string reason;
     std::tie(verified, reason) = csg->verifyStatsAndComponents(gModel->getGraph());
@@ -156,7 +151,7 @@ static PyObject* sgSetFreq(PyObject *self, PyObject *args)
 
 
 static PyMethodDef sgMethods[] = {
-    {   "addStatistic", sgAddStat, METH_VARARGS,
+    {   "addStatistic", sgAddStat, METH_O,
         "Add a new statistic to the group" },
     {   "addComponent", sgAddComp, METH_O,
         "Add a component to the group" },
